@@ -103,7 +103,7 @@ The browser remembers your job. **Save or load a job** copies a job out as text 
 - **Use real numbers.** The default watts and bitrates are typical values, not measurements.
 - **Check vendor ports.** Camera, VMS and access control ports vary. Compare the firewall requests with your vendor's port list.
 - **Change every `CHANGE_ME`.**
-- **MikroTik:** VLAN filtering is switched on as the last line. Paste the config from a console or a port you won't lose.
+- **MikroTik:** start from an empty switch (`/system reset-configuration no-defaults=yes`), because the factory config already holds every port in its own bridge. VLAN filtering and the unused-port shutdown come last, so paste the config from a console or a port you won't lose.
 
 ## How it works
 

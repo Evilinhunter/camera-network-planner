@@ -201,7 +201,7 @@ const SAMPLE={s:{name:'Oakridge Self Storage',code:'OAK',num:12,gw:'254',ret:30,
  v:{mgmt:99,sys:100,cam:101,acs:102,park:999},
  d:[{t:'fixed',q:14,w:8,m:4},{t:'ir',q:6,w:13,m:4},{t:'ptz',q:2,w:30,m:6},{t:'door',q:4,w:15,m:.1},{t:'intercom',q:1,w:13,m:2},{t:'nvr',q:1,w:0,m:0},{t:'ws',q:1,w:0,m:0}]};
 const KEY='cnp.v1';
-const VEND={cisco:{n:'Cisco IOS-XE',up:p=>'TenGigabitEthernet1/1/1',note:'Built for Catalyst 9200 and 9300 style access switches.'},aruba:{n:'Aruba AOS-CX',up:p=>`1/1/${p.ports+1}`,note:'Built for Aruba CX 6000, 6100 and 6200 style access switches.'},arista:{n:'Arista EOS',up:p=>`Ethernet${p.ports+1}`,note:'Built for Arista 720XP style PoE access switches.'},mikrotik:{n:'MikroTik RouterOS 7',up:p=>'sfp-sfpplus1',note:'Built for CRS3xx and CRS5xx switches using bridge VLAN filtering with hardware offload. VLAN filtering is switched on last, so paste it from a console or a port you will not lose.'}};
+const VEND={cisco:{n:'Cisco IOS-XE',up:p=>'TenGigabitEthernet1/1/1',note:'Built for Catalyst 9200 and 9300 style access switches.'},aruba:{n:'Aruba AOS-CX',up:p=>`1/1/${p.ports+1}`,note:'Built for Aruba CX 6000, 6100 and 6200 style access switches.'},arista:{n:'Arista EOS',up:p=>`Ethernet${p.ports+1}`,note:'Built for Arista 720XP style PoE access switches.'},mikrotik:{n:'MikroTik RouterOS 7',up:p=>'sfp-sfpplus1',note:'Built for CRS3xx and CRS5xx switches using bridge VLAN filtering with hardware offload. Reset the switch to an empty config first, because the factory config already holds every port in its own bridge. VLAN filtering and the unused-port shutdown come last, so paste it from a console or a port you will not lose.'}};
 const clone=o=>JSON.parse(JSON.stringify(o));
 let S=clone(SAMPLE),tab='ip',R=null;
 const fix=x=>{if(!x.vn){x.vn=clone(SAMPLE.vn);if(x.w.ifp)x.vn.cisco.ifp=x.w.ifp;if(x.w.up)x.vn.cisco.up=x.w.up}if(!x.w.vend)x.w.vend='cisco';return x};
@@ -250,7 +250,7 @@ const vf=(p,k)=>({ifp:(S.vn[k]&&S.vn[k].ifp)||SAMPLE.vn[k].ifp,up:(S.vn[k]&&S.vn
 const used=p=>VL.map(y=>p.oct(y[0]));
 function cisco(p,x){
  const s=S.s,w=S.w,v=S.v,{ifp,up}=vf(p,'cisco'),L=[];
- L.push(`! ===== ${x.name} (${s.name}) =====`,`hostname ${x.name}`,'vtp mode transparent','spanning-tree mode rapid-pvst','spanning-tree extend system-id',`ip domain name ${s.dom||'example.local'}`,'username admin privilege 15 secret CHANGE_ME','!');
+ L.push(`! ===== ${x.name} (${s.name}) =====`,`hostname ${x.name}`,'vtp mode transparent','spanning-tree mode rapid-pvst','spanning-tree extend system-id',`ip domain name ${s.dom||'example.local'}`,'crypto key generate rsa general-keys modulus 2048','username admin privilege 15 secret CHANGE_ME','!');
  VL.forEach(y=>L.push(`vlan ${p.oct(y[0])}`,` name ${y[1]}`));
  L.push(`vlan ${p.oct('park')}`,' name UNUSED','!');
  const unused=[];
@@ -259,7 +259,7 @@ function cisco(p,x){
  rangeTxt(unused).forEach(([a,b])=>L.push(`interface range ${ifp}${a}${b>a?' - '+b:''}`,' description UNUSED',' switchport mode access',` switchport access vlan ${p.oct('park')}`,' shutdown','!'));
  for(let i=p.usable;i<p.ports;i++)L.push(`interface ${ifp}${i+1}`,' description RESERVED-UPLINK',' shutdown','!');
  L.push(`interface ${up}`,' description UPLINK-TO-CORE',' switchport mode trunk',` switchport trunk allowed vlan ${used(p).join(',')}`,' switchport nonegotiate',' no shutdown','!');
- L.push('interface Vlan1',' shutdown','!',`interface Vlan${p.oct('mgmt')}`,` description ${VL[0][1]}`,` ip address ${x.ip} 255.255.255.0`,' no shutdown','!',`ip default-gateway ${p.sub('mgmt')}.${p.gwh}`,`ntp server ${s.ntp||'CHANGE_ME'}`,`ip name-server ${s.ntp||'CHANGE_ME'}`,'no ip http server','no ip http secure-server','ip ssh version 2','! Generate SSH keys once: crypto key generate rsa modulus 2048','line vty 0 15',' login local',' transport input ssh','!','end');
+ L.push('interface Vlan1',' shutdown','!',`interface Vlan${p.oct('mgmt')}`,` description ${VL[0][1]}`,` ip address ${x.ip} 255.255.255.0`,' no shutdown','!',`ip default-gateway ${p.sub('mgmt')}.${p.gwh}`,`ntp server ${s.ntp||'CHANGE_ME'}`,`ip name-server ${s.ntp||'CHANGE_ME'}`,'no ip http server','no ip http secure-server','ip ssh version 2','line vty 0 15',' login local',' transport input ssh','!','end');
  return L.join('\n');
 }
 
@@ -291,7 +291,7 @@ function arista(p,x){
 }
 function mikrotik(p,x){
  const s=S.s,{ifp,up}=vf(p,'mikrotik'),L=[],unused=[],byV={},mg=p.oct('mgmt');
- L.push(`# ===== ${x.name} (${s.name}) =====`,`/system identity set name=${x.name}`,'/user set admin password=CHANGE_ME','/interface bridge add name=bridge1 protocol-mode=rstp vlan-filtering=no','/interface bridge port');
+ L.push(`# ===== ${x.name} (${s.name}) =====`,'# Start from an empty switch: /system reset-configuration no-defaults=yes',`/system identity set name=${x.name}`,'/user set admin password=CHANGE_ME','/interface bridge add name=bridge1 protocol-mode=rstp vlan-filtering=no','/interface bridge port');
  x.ports.forEach((d,i)=>{const n=i+1;if(i>=p.usable)return;if(!d){unused.push(`${ifp}${n}`);return}
   const vid=p.oct(d.v);(byV[vid]=byV[vid]||[]).push(`${ifp}${n}`);
   L.push(`add bridge=bridge1 interface=${ifp}${n} pvid=${vid} frame-types=admit-only-untagged-and-priority-tagged edge=yes bpdu-guard=yes comment="${d.id} ${d.type}"`)});
@@ -300,8 +300,8 @@ function mikrotik(p,x){
  const poe=x.ports.map((d,i)=>d&&i<p.usable?`set ${ifp}${i+1} poe-out=${d.w>0?'auto-on':'off'}`:null).filter(Boolean);
  if(poe.length)L.push('/interface ethernet poe',...poe);
  for(let i=p.usable;i<p.ports;i++)unused.push(`${ifp}${i+1}`);
+ L.push(`/interface vlan add interface=bridge1 name=vlan${mg}-mgmt vlan-id=${mg}`,`/ip address add address=${x.ip}/24 interface=vlan${mg}-mgmt`,`/ip route add dst-address=0.0.0.0/0 gateway=${p.sub('mgmt')}.${p.gwh}`,`/ip dns set servers=${s.ntp||'CHANGE_ME'}`,'/system ntp client set enabled=yes',`/system ntp client servers add address=${s.ntp||'CHANGE_ME'}`,'/ip service disable telnet,ftp,www,www-ssl,api,api-ssl','# Turn on VLAN filtering, then shut the unused ports','/interface bridge set bridge1 vlan-filtering=yes');
  if(unused.length)L.push(`/interface ethernet disable ${unused.join(',')}`);
- L.push(`/interface vlan add interface=bridge1 name=vlan${mg}-mgmt vlan-id=${mg}`,`/ip address add address=${x.ip}/24 interface=vlan${mg}-mgmt`,`/ip route add dst-address=0.0.0.0/0 gateway=${p.sub('mgmt')}.${p.gwh}`,`/ip dns set servers=${s.ntp||'CHANGE_ME'}`,'/system ntp client set enabled=yes',`/system ntp client servers add address=${s.ntp||'CHANGE_ME'}`,'/ip service disable telnet,ftp,www,api','# Turn on VLAN filtering last','/interface bridge set bridge1 vlan-filtering=yes');
  return L.join('\n');
 }
 const GEN={cisco,aruba,arista,mikrotik};
