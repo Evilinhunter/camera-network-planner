@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Camera Network Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+/* VOICE work tool for security and AV integrators, precise and calm
+   IDEA the integrator's as-built packet: switch faceplates, port schedule, configs
+   PICTURE live switch faceplates, ports coloured like patch cables by VLAN, PoE meters under each
+   COLOUR deep rack green ground up top, white below; cable colours yellow, coral, sky, lime
+   TYPE Inter Tight 700 + Inter, JetBrains Mono for configs
+   LAYOUT title and figures over full-width faceplates; inputs left, outputs right; phone stacks title, faceplates, inputs, outputs */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0c1412);--ink:light-dark(#121816,#e7efec);--mute:light-dark(#55625d,#9fb0aa);--line:light-dark(#d9e1de,#24332e);--panel:light-dark(#f4f7f6,#121d1a);--rack:#00463c;--rack2:#003129;--onrack:#eaf6f0;--cam:#f5c518;--acs:#ff6f59;--sys:#8fd3ff;--mgmt:#e6f5c8;--park:#0f2a24;--warn:light-dark(#b3261e,#ff8a80);--ok:light-dark(#0d6b4f,#7fdcb4)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+.band{padding-block:clamp(24px,4vw,48px);padding-left:max(5vw,16px);padding-right:max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+.top{background:var(--rack);color:var(--onrack)}
+h1{font:700 clamp(32px,4.4vw,46px)/1.05 "Inter Tight",Inter,sans-serif;letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+h2{font:700 22px/1.2 "Inter Tight",Inter,sans-serif;margin:0 0 12px;letter-spacing:-.01em}
+h3{font:600 16px/1.3 Inter,sans-serif;margin:18px 0 8px}
+.sub{margin:0;color:#bcd9ce;max-width:62ch}
+.head{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;align-items:end;margin-bottom:22px}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5em,1fr));gap:1px;background:#ffffff22;border:1px solid #ffffff22;border-radius:10px;overflow:hidden}
+.fg{background:var(--rack2);padding:10px 12px}
+.fg b{display:block;font:700 clamp(22px,2.6vw,28px)/1.1 "Inter Tight",sans-serif;white-space:nowrap}
+.fg span{font-size:13px;color:#bcd9ce}
+.racks{display:grid;gap:14px}
+.sw{background:#1b1f1e;border-radius:10px;padding:12px 14px 12px;box-shadow:inset 0 1px 0 #ffffff22,0 2px 0 #00000055}
+.swh{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;font-size:14px;color:#d7e4df;margin-bottom:8px}
+.swh b{color:#fff;font-weight:600}
+.fp{overflow-x:auto;padding-bottom:2px}
+.ports{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);gap:4px;min-width:max-content}
+.pt{width:20px;height:16px;border-radius:3px;background:var(--park);border:1px solid #00000066;box-shadow:inset 0 -3px 0 #00000040}
+.pt.cam{background:var(--cam)}.pt.acs{background:var(--acs)}.pt.sys{background:var(--sys)}.pt.up{background:#fff}
+.pt.over{outline:2px solid #ff3b30;outline-offset:1px}
+.meter{position:relative;height:10px;background:#ffffff1a;border-radius:5px;margin-top:10px;overflow:hidden}
+.meter i{position:absolute;inset:0 auto 0 0;background:var(--mgmt);border-radius:5px}
+.meter i.hot{background:var(--acs)}
+.meter u{position:absolute;top:0;bottom:0;width:2px;background:#fff}
+.mt{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:#bcd9ce;margin-top:4px;flex-wrap:wrap}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:#d7e4df;margin-top:14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:12px;border-radius:3px;display:inline-block}
+.warns{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:6px}
+.warns li{background:#ff6f5922;border-left:3px solid var(--acs);padding:6px 10px;border-radius:4px;font-size:14px;color:#ffe2dc}
+.warns li.ok{background:#e6f5c81c;border-color:var(--mgmt);color:#e6f5c8}
+.main{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:28px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.panel+.panel{margin-top:14px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+label{display:block;font-size:13px;color:var(--mute);font-weight:500}
+input,select,textarea{font:16px Inter,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 9px;width:100%;margin-top:3px;min-height:42px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid #0d7680;outline-offset:1px}
+.full{grid-column:1/-1}
+.dev{display:grid;grid-template-columns:minmax(0,1fr) 64px 64px 64px 36px;gap:6px;align-items:end;padding:8px 0;border-bottom:1px solid var(--line)}
+.dev select{min-width:0}
+.dev .x{min-height:42px;border:0;background:none;color:var(--mute);font-size:20px;cursor:pointer;border-radius:6px}
+.dev .x:hover{background:var(--line);color:var(--ink)}
+.dvh{display:grid;grid-template-columns:minmax(0,1fr) 64px 64px 64px 36px;gap:6px;font-size:13px;color:var(--mute)}
+button.b{font:600 15px Inter,sans-serif;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+button.b:hover{border-color:var(--mute)}
+button.p{background:var(--rack);color:#fff;border-color:var(--rack)}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tabs button{font:600 15px Inter,sans-serif;background:none;border:0;border-bottom:3px solid transparent;color:var(--mute);padding:10px 12px;min-height:44px;cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--ink);border-color:var(--rack)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th{text-align:left;font-weight:600;font-size:13px;color:var(--mute);border-bottom:1px solid var(--line);padding:8px 8px}
+td{border-bottom:1px solid var(--line);padding:8px 8px;vertical-align:top}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:14px}
+.nw{white-space:nowrap}
+.chip{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:0}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin:0;overflow-x:auto;font:13.5px/1.5 "JetBrains Mono",ui-monospace,monospace;max-height:640px}
+.note{font-size:14px;color:var(--mute);margin:10px 0 0}
+.allow{color:var(--ok);font-weight:600}.deny{color:var(--warn);font-weight:600}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.seg button{font:600 14px Inter,sans-serif;min-height:40px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--mute);cursor:pointer}
+.seg button[aria-checked=true]{background:var(--rack);border-color:var(--rack);color:#fff}
+.cp{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+details summary{cursor:pointer;font-weight:600;min-height:32px}
+footer{border-top:1px solid var(--line);color:var(--mute);font-size:14px}
+@media(max-width:900px){.main{grid-template-columns:minmax(0,1fr)}.head{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:2px 0;text-align:right}.stack td::before{content:attr(data-l);color:var(--mute);text-align:left}.dev,.dvh{grid-template-columns:minmax(0,1fr) 52px 52px 52px 32px}.pt{width:16px;height:14px}}
+@media(prefers-reduced-motion:no-preference){.meter i{transition:width .35s ease}}
+</style>
+</head>
+<body>
+<section class="band top">
+ <div class="wrap">
+  <div class="head">
+   <div>
+    <h1>Camera network planner</h1>
+    <p class="sub">List the cameras, doors and servers on a job. Get the VLAN and IP plan, PoE budget, port map, switch config and IT handoff in one pass.</p>
+   </div>
+   <div class="figs" id="figs"></div>
+  </div>
+  <div class="racks" id="racks"></div>
+  <div class="legend">
+   <span><i style="background:var(--cam)"></i>Cameras</span>
+   <span><i style="background:var(--acs)"></i>Access control</span>
+   <span><i style="background:var(--sys)"></i>Servers and workstations</span>
+   <span><i style="background:#fff"></i>Uplink</span>
+   <span><i style="background:var(--park);border:1px solid #ffffff44"></i>Unused, shut down</span>
+  </div>
+  <ul class="warns" id="warns"></ul>
+ </div>
+</section>
+
+<section class="band">
+ <div class="wrap main">
+  <div>
+   <div class="panel">
+    <h2>Job</h2>
+    <div class="grid2">
+     <div class="full"><label for="s-name">Site name</label><input id="s-name"></div>
+     <div><label for="s-code">Hostname code</label><input id="s-code"></div>
+     <div><label for="s-num">Site number (2nd octet)</label><input id="s-num" type="number" min="0" max="255"></div>
+     <div><label for="s-gw">Gateway address</label><select id="s-gw"><option value="254">.254</option><option value="1">.1</option></select></div>
+     <div><label for="s-ret">Retention (days)</label><input id="s-ret" type="number" min="1" max="365"></div>
+     <div><label for="s-corp">Customer user subnet</label><input id="s-corp"></div>
+     <div><label for="s-ntp">NTP / DNS server</label><input id="s-ntp"></div>
+     <div class="full"><label for="s-dom">Domain name</label><input id="s-dom"></div>
+    </div>
+   </div>
+   <div class="panel">
+    <h2>Devices</h2>
+    <div class="dvh"><span>Type</span><span>Qty</span><span>Watts</span><span>Mbps</span><span></span></div>
+    <div id="devs"></div>
+    <div class="row"><button class="b" id="add">Add device</button></div>
+    <p class="note">Watts and Mbps start from typical values. Use the spec sheet figures for the actual models.</p>
+   </div>
+   <div class="panel">
+    <h2>Switches</h2>
+    <div class="grid2">
+     <div class="full"><label for="w-vend">Switch platform</label><select id="w-vend"><option value="cisco">Cisco IOS-XE</option><option value="aruba">Aruba AOS-CX</option><option value="arista">Arista EOS</option><option value="mikrotik">MikroTik RouterOS 7</option></select></div>
+     <div><label for="w-ports">Access ports per switch</label><select id="w-ports"><option>8</option><option>12</option><option>16</option><option>24</option><option>48</option></select></div>
+     <div><label for="w-budget">PoE budget (W)</label><input id="w-budget" type="number" min="0"></div>
+     <div><label for="w-maxw">Max watts per port</label><select id="w-maxw"><option value="15.4">15.4 (802.3af)</option><option value="30">30 (802.3at)</option><option value="60">60 (802.3bt T3)</option><option value="90">90 (802.3bt T4)</option></select></div>
+     <div><label for="w-head">Use up to (% of budget)</label><input id="w-head" type="number" min="10" max="100"></div>
+     <div><label for="w-upl">Uplink speed</label><select id="w-upl"><option value="1000">1 Gbps</option><option value="10000">10 Gbps</option></select></div>
+     <div><label for="w-res">Access ports kept for uplink</label><input id="w-res" type="number" min="0" max="4"></div>
+     <div><label for="w-ifp">Port name prefix</label><input id="w-ifp" class="mono"></div>
+     <div><label for="w-up">Uplink interface</label><input id="w-up" class="mono" placeholder="auto"></div>
+    </div>
+   </div>
+   <div class="panel">
+    <h2>VLAN IDs</h2>
+    <div class="grid2">
+     <div><label for="v-mgmt">Network management</label><input id="v-mgmt" type="number"></div>
+     <div><label for="v-sys">Security systems</label><input id="v-sys" type="number"></div>
+     <div><label for="v-cam">Cameras</label><input id="v-cam" type="number"></div>
+     <div><label for="v-acs">Access control</label><input id="v-acs" type="number"></div>
+     <div class="full"><label for="v-park">Unused port parking VLAN</label><input id="v-park" type="number"></div>
+    </div>
+    <p class="note">Subnets follow 10.site.VLAN.0/24, so each VLAN ID maps to its third octet.</p>
+   </div>
+   <div class="panel">
+    <details>
+     <summary>Save or load a job</summary>
+     <p class="note">Copy this text to keep the job, or paste a saved job in and load it.</p>
+     <textarea id="json" rows="6" class="mono"></textarea>
+     <div class="row"><button class="b" id="cpjson">Copy job</button><button class="b" id="ldjson">Load pasted job</button><button class="b" id="sample">Reset to sample</button></div>
+    </details>
+   </div>
+  </div>
+
+  <div>
+   <div class="tabs" role="tablist" id="tabs"></div>
+   <div id="out"></div>
+  </div>
+ </div>
+</section>
+<footer class="band"><div class="wrap">The job loaded at start is a sample (Oakridge Self Storage). Configs cover Cisco IOS-XE, Aruba AOS-CX, Arista EOS and MikroTik RouterOS 7. Review every output before you deploy it. Camera and VMS ports vary by vendor.</div></footer>
+
+<script>
+{
+const TYPES={
+ fixed:{n:'Fixed camera',v:'cam',w:8,m:4,p:'CAM'},
+ ir:{n:'Camera with IR or heater',v:'cam',w:13,m:4,p:'CAM'},
+ multi:{n:'Multi-sensor camera',v:'cam',w:25,m:12,p:'MSC'},
+ ptz:{n:'PTZ camera',v:'cam',w:30,m:6,p:'PTZ'},
+ door:{n:'Door controller',v:'acs',w:15,m:.1,p:'DOOR'},
+ reader:{n:'PoE card reader',v:'acs',w:5,m:.05,p:'RDR'},
+ intercom:{n:'Video intercom',v:'acs',w:13,m:2,p:'ICM'},
+ nvr:{n:'NVR or VMS server',v:'sys',w:0,m:0,p:'NVR'},
+ ws:{n:'Monitoring workstation',v:'sys',w:0,m:0,p:'WS'}
+};
+const VL=[['mgmt','NET-MGMT','Network management'],['sys','SEC-SYSTEMS','Security systems'],['cam','SEC-CAMERAS','Cameras'],['acs','SEC-ACCESS','Access control']];
+const SAMPLE={s:{name:'Oakridge Self Storage',code:'OAK',num:12,gw:'254',ret:30,corp:'10.12.10.0/24',ntp:'10.12.10.5',dom:'oakridge.local'},
+ w:{vend:'cisco',ports:24,budget:370,maxw:'30',head:80,upl:'10000',res:0},
+ vn:{cisco:{ifp:'GigabitEthernet1/0/',up:''},aruba:{ifp:'1/1/',up:''},arista:{ifp:'Ethernet',up:''},mikrotik:{ifp:'ether',up:''}},
+ v:{mgmt:99,sys:100,cam:101,acs:102,park:999},
+ d:[{t:'fixed',q:14,w:8,m:4},{t:'ir',q:6,w:13,m:4},{t:'ptz',q:2,w:30,m:6},{t:'door',q:4,w:15,m:.1},{t:'intercom',q:1,w:13,m:2},{t:'nvr',q:1,w:0,m:0},{t:'ws',q:1,w:0,m:0}]};
+const KEY='cnp.v1';
+const VEND={cisco:{n:'Cisco IOS-XE',up:p=>'TenGigabitEthernet1/1/1',note:'Built for Catalyst 9200 and 9300 style access switches.'},aruba:{n:'Aruba AOS-CX',up:p=>`1/1/${p.ports+1}`,note:'Built for Aruba CX 6000, 6100 and 6200 style access switches.'},arista:{n:'Arista EOS',up:p=>`Ethernet${p.ports+1}`,note:'Built for Arista 720XP style PoE access switches.'},mikrotik:{n:'MikroTik RouterOS 7',up:p=>'sfp-sfpplus1',note:'Built for CRS3xx and CRS5xx switches using bridge VLAN filtering with hardware offload. VLAN filtering is switched on last, so paste it from a console or a port you will not lose.'}};
+const clone=o=>JSON.parse(JSON.stringify(o));
+let S=clone(SAMPLE),tab='ip',R=null;
+const fix=x=>{if(!x.vn){x.vn=clone(SAMPLE.vn);if(x.w.ifp)x.vn.cisco.ifp=x.w.ifp;if(x.w.up)x.vn.cisco.up=x.w.up}if(!x.w.vend)x.w.vend='cisco';return x};
+try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&x.s&&x.d&&x.w&&x.v)S=fix(x)}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num=(v,d)=>{const n=parseFloat(v);return isFinite(n)?n:d};
+const pad=(n,l)=>String(n).padStart(l,'0');
+
+function plan(){
+ const s=S.s,w=S.w,v=S.v,warn=[];
+ const site=Math.max(0,Math.min(255,Math.round(num(s.num,1))));
+ const ports=Math.round(num(w.ports,24)),res=Math.max(0,Math.min(ports-1,Math.round(num(w.res,0))));
+ const usable=ports-res,budget=num(w.budget,0),maxw=num(w.maxw,30),cap=budget*Math.max(10,Math.min(100,num(w.head,80)))/100;
+ const oct=k=>{const id=Math.round(num(v[k],0));return id};
+ const sub=k=>`10.${site}.${oct(k)}`;
+ const gwh=s.gw==='1'?1:254;
+ const ids=VL.map(x=>oct(x[0])).concat(oct('park'));
+ if(new Set(ids).size!==ids.length)warn.push('Two roles share one VLAN ID. Give each role its own ID.');
+ VL.forEach(x=>{const id=oct(x[0]);if(id<2||id>255)warn.push(`VLAN ${id} (${x[2]}) cannot be a third octet. Use an ID from 2 to 255.`)});
+ const cnt={},hostN={mgmt:11,sys:11,cam:11,acs:11},devs=[];
+ S.d.forEach(r=>{const T=TYPES[r.t];if(!T)return;const q=Math.max(0,Math.min(500,Math.round(num(r.q,0))));
+  for(let i=0;i<q;i++){cnt[T.p]=(cnt[T.p]||0)+1;const h=hostN[T.v]++;
+   devs.push({id:`${T.p}-${pad(cnt[T.p],3)}`,type:T.n,v:T.v,w:num(r.w,0),m:num(r.m,0),ip:h<=250?`${sub(T.v)}.${h}`:'no address left'})}});
+ VL.forEach(x=>{const used=hostN[x[0]]-11;if(used>240)warn.push(`${x[2]} needs ${used} addresses but a /24 holds 240 here. Split the devices across two VLANs.`)});
+ const sws=[];let cur=null;
+ const newSw=()=>{cur={n:sws.length+1,ports:Array(ports).fill(null),poe:0,mbps:0,used:0};sws.push(cur)};
+ devs.forEach(d=>{
+  if(d.w>maxw){d.over=true;warn.push(`${d.id} draws ${d.w} W but ports supply up to ${maxw} W. Use an 802.3bt switch or a midspan injector.`)}
+  if(!cur||cur.used>=usable||(d.w>0&&cur.poe+d.w>cap&&cur.poe>0))newSw();
+  cur.ports[cur.used]=d;cur.used++;cur.poe+=d.w;cur.mbps+=d.m;d.sw=cur.n;d.port=cur.used});
+ if(!sws.length)newSw();
+ sws.forEach(x=>{x.name=`${(s.code||'SITE').toUpperCase()}-SEC-SW${pad(x.n,2)}`;x.ip=`${sub('mgmt')}.${10+x.n}`;
+  if(x.mbps>num(w.upl,1000)*.7)warn.push(`${x.name} sends about ${Math.round(x.mbps)} Mbps, over 70% of its uplink. Use a faster uplink or spread the cameras out.`)});
+ if(sws.length>1)warn.push(`This job needs ${sws.length} switches at ${w.head}% of a ${budget} W budget and ${usable} access ports each.`);
+ if(!devs.some(d=>d.type===TYPES.nvr.n))warn.push('No NVR or VMS server is listed. Add one, or note where recording happens.');
+ const camM=devs.filter(d=>d.v==='cam').reduce((a,d)=>a+d.m,0);
+ const tb=camM*86400*num(s.ret,30)/8/1e6;
+ return{site,sub,gwh,oct,devs,sws,warn,ports,res,usable,budget,cap,camM,tb,poe:devs.reduce((a,d)=>a+d.w,0),mbps:devs.reduce((a,d)=>a+d.m,0)};
+}
+
+function rangeTxt(list){const out=[];let a=null,b=null;list.forEach(n=>{if(a===null){a=b=n}else if(n===b+1){b=n}else{out.push([a,b]);a=b=n}});if(a!==null)out.push([a,b]);return out}
+
+const vf=(p,k)=>({ifp:(S.vn[k]&&S.vn[k].ifp)||SAMPLE.vn[k].ifp,up:(S.vn[k]&&S.vn[k].up)||VEND[k].up(p)});
+const used=p=>VL.map(y=>p.oct(y[0]));
+function cisco(p,x){
+ const s=S.s,w=S.w,v=S.v,{ifp,up}=vf(p,'cisco'),L=[];
+ L.push(`! ===== ${x.name} (${s.name}) =====`,`hostname ${x.name}`,'vtp mode transparent','spanning-tree mode rapid-pvst','spanning-tree extend system-id',`ip domain name ${s.dom||'example.local'}`,'username admin privilege 15 secret CHANGE_ME','!');
+ VL.forEach(y=>L.push(`vlan ${p.oct(y[0])}`,` name ${y[1]}`));
+ L.push(`vlan ${p.oct('park')}`,' name UNUSED','!');
+ const unused=[];
+ x.ports.forEach((d,i)=>{const n=i+1;if(i>=p.usable)return;if(!d){unused.push(n);return}
+  L.push(`interface ${ifp}${n}`,` description ${d.id} ${d.type}`,' switchport mode access',` switchport access vlan ${p.oct(d.v)}`,' switchport nonegotiate',' spanning-tree portfast',' spanning-tree bpduguard enable',' storm-control broadcast level 1.00',d.w>0?' power inline auto':' power inline never',' no shutdown','!')});
+ rangeTxt(unused).forEach(([a,b])=>L.push(`interface range ${ifp}${a}${b>a?' - '+b:''}`,' description UNUSED',' switchport mode access',` switchport access vlan ${p.oct('park')}`,' shutdown','!'));
+ for(let i=p.usable;i<p.ports;i++)L.push(`interface ${ifp}${i+1}`,' description RESERVED-UPLINK',' shutdown','!');
+ L.push(`interface ${up}`,' description UPLINK-TO-CORE',' switchport mode trunk',` switchport trunk allowed vlan ${used(p).join(',')}`,' switchport nonegotiate',' no shutdown','!');
+ L.push('interface Vlan1',' shutdown','!',`interface Vlan${p.oct('mgmt')}`,` description ${VL[0][1]}`,` ip address ${x.ip} 255.255.255.0`,' no shutdown','!',`ip default-gateway ${p.sub('mgmt')}.${p.gwh}`,`ntp server ${s.ntp||'CHANGE_ME'}`,`ip name-server ${s.ntp||'CHANGE_ME'}`,'no ip http server','no ip http secure-server','ip ssh version 2','! Generate SSH keys once: crypto key generate rsa modulus 2048','line vty 0 15',' login local',' transport input ssh','!','end');
+ return L.join('\n');
+}
+
+function aruba(p,x){
+ const s=S.s,{ifp,up}=vf(p,'aruba'),L=[],unused=[];
+ L.push(`! ===== ${x.name} (${s.name}) =====`,`hostname ${x.name}`,'user admin group administrators password plaintext CHANGE_ME','spanning-tree','!');
+ VL.forEach(y=>L.push(`vlan ${p.oct(y[0])}`,`    name ${y[1]}`));
+ L.push(`vlan ${p.oct('park')}`,'    name UNUSED','!');
+ x.ports.forEach((d,i)=>{const n=i+1;if(i>=p.usable)return;if(!d){unused.push(n);return}
+  L.push(`interface ${ifp}${n}`,`    description ${d.id} ${d.type}`,'    no shutdown','    no routing',`    vlan access ${p.oct(d.v)}`,'    spanning-tree port-type admin-edge','    spanning-tree bpdu-guard',d.w>0?'    power-over-ethernet':'    no power-over-ethernet','!')});
+ rangeTxt(unused).forEach(([a,b])=>L.push(`interface ${ifp}${a}${b>a?'-'+ifp+b:''}`,'    description UNUSED','    no routing',`    vlan access ${p.oct('park')}`,'    shutdown','!'));
+ for(let i=p.usable;i<p.ports;i++)L.push(`interface ${ifp}${i+1}`,'    description RESERVED-UPLINK','    shutdown','!');
+ L.push(`interface ${up}`,'    description UPLINK-TO-CORE','    no shutdown','    no routing',`    vlan trunk native ${p.oct('park')}`,`    vlan trunk allowed ${used(p).join(',')}`,'!');
+ L.push(`interface vlan ${p.oct('mgmt')}`,`    description ${VL[0][1]}`,`    ip address ${x.ip}/24`,'!',`ip route 0.0.0.0/0 ${p.sub('mgmt')}.${p.gwh}`,`ip dns server-address ${s.ntp||'CHANGE_ME'}`,`ntp server ${s.ntp||'CHANGE_ME'} iburst`,'ntp enable','ssh server vrf default','no https-server vrf default','!');
+ return L.join('\n');
+}
+function arista(p,x){
+ const s=S.s,{ifp,up}=vf(p,'arista'),L=[],unused=[];
+ L.push(`! ===== ${x.name} (${s.name}) =====`,`hostname ${x.name}`,'username admin privilege 15 role network-admin secret CHANGE_ME','spanning-tree mode rapid-pvst','!');
+ VL.forEach(y=>L.push(`vlan ${p.oct(y[0])}`,`   name ${y[1]}`));
+ L.push(`vlan ${p.oct('park')}`,'   name UNUSED','!');
+ x.ports.forEach((d,i)=>{const n=i+1;if(i>=p.usable)return;if(!d){unused.push(n);return}
+  L.push(`interface ${ifp}${n}`,`   description ${d.id} ${d.type}`,'   switchport mode access',`   switchport access vlan ${p.oct(d.v)}`,'   spanning-tree portfast','   spanning-tree bpduguard enable','   storm-control broadcast level 1',...(d.w>0?[]:['   poe disabled']),'   no shutdown','!')});
+ rangeTxt(unused).forEach(([a,b])=>L.push(`interface ${ifp}${a}${b>a?'-'+b:''}`,'   description UNUSED','   switchport mode access',`   switchport access vlan ${p.oct('park')}`,'   shutdown','!'));
+ for(let i=p.usable;i<p.ports;i++)L.push(`interface ${ifp}${i+1}`,'   description RESERVED-UPLINK','   shutdown','!');
+ L.push(`interface ${up}`,'   description UPLINK-TO-CORE','   switchport mode trunk',`   switchport trunk allowed vlan ${used(p).join(',')}`,'   no shutdown','!');
+ L.push(`interface Vlan${p.oct('mgmt')}`,`   description ${VL[0][1]}`,`   ip address ${x.ip}/24`,'!',`ip route 0.0.0.0/0 ${p.sub('mgmt')}.${p.gwh}`,`ip name-server vrf default ${s.ntp||'CHANGE_ME'}`,`ntp server ${s.ntp||'CHANGE_ME'}`,'management api http-commands','   shutdown','!','end');
+ return L.join('\n');
+}
+function mikrotik(p,x){
+ const s=S.s,{ifp,up}=vf(p,'mikrotik'),L=[],unused=[],byV={},mg=p.oct('mgmt');
+ L.push(`# ===== ${x.name} (${s.name}) =====`,`/system identity set name=${x.name}`,'/user set admin password=CHANGE_ME','/interface bridge add name=bridge1 protocol-mode=rstp vlan-filtering=no','/interface bridge port');
+ x.ports.forEach((d,i)=>{const n=i+1;if(i>=p.usable)return;if(!d){unused.push(`${ifp}${n}`);return}
+  const vid=p.oct(d.v);(byV[vid]=byV[vid]||[]).push(`${ifp}${n}`);
+  L.push(`add bridge=bridge1 interface=${ifp}${n} pvid=${vid} frame-types=admit-only-untagged-and-priority-tagged edge=yes bpdu-guard=yes comment="${d.id} ${d.type}"`)});
+ L.push(`add bridge=bridge1 interface=${up} frame-types=admit-only-vlan-tagged comment="UPLINK-TO-CORE"`,'/interface bridge vlan');
+ VL.forEach(y=>{const vid=p.oct(y[0]);L.push(`add bridge=bridge1 vlan-ids=${vid} tagged=${vid===mg?'bridge1,':''}${up}${byV[vid]?' untagged='+byV[vid].join(','):''} comment=${y[1]}`)});
+ const poe=x.ports.map((d,i)=>d&&i<p.usable?`set ${ifp}${i+1} poe-out=${d.w>0?'auto-on':'off'}`:null).filter(Boolean);
+ if(poe.length)L.push('/interface ethernet poe',...poe);
+ for(let i=p.usable;i<p.ports;i++)unused.push(`${ifp}${i+1}`);
+ if(unused.length)L.push(`/interface ethernet disable ${unused.join(',')}`);
+ L.push(`/interface vlan add interface=bridge1 name=vlan${mg}-mgmt vlan-id=${mg}`,`/ip address add address=${x.ip}/24 interface=vlan${mg}-mgmt`,`/ip route add dst-address=0.0.0.0/0 gateway=${p.sub('mgmt')}.${p.gwh}`,`/ip dns set servers=${s.ntp||'CHANGE_ME'}`,'/system ntp client set enabled=yes',`/system ntp client servers add address=${s.ntp||'CHANGE_ME'}`,'/ip service disable telnet,ftp,www,api','# Turn on VLAN filtering last','/interface bridge set bridge1 vlan-filtering=yes');
+ return L.join('\n');
+}
+const GEN={cisco,aruba,arista,mikrotik};
+
+function rules(p){
+ const has=k=>p.devs.some(d=>d.v===k),c=k=>`${p.sub(k)}.0/24`,corp=S.s.corp||'customer user subnet',ntp=S.s.ntp||'customer DNS/NTP';
+ const r=[['allow','Cameras',c('cam'),'Security systems',c('sys'),'Video streams and setup. Often RTSP TCP 554 and HTTP/S 80/443. Check the camera and VMS vendor port list.']];
+ r.push(['allow','Security systems',c('sys'),'Cameras',c('cam'),'VMS pulls streams and manages cameras.']);
+ if(has('acs'))r.push(['allow','Access control',c('acs'),'Security systems',c('sys'),'Controllers and intercoms talk to the access control server. Vendor ports.'],['allow','Security systems',c('sys'),'Access control',c('acs'),'Server pushes schedules and credentials.']);
+ r.push(['allow','Customer users',corp,'Security systems',c('sys'),'VMS and access client software only, vendor client ports.'],
+  ['allow','Security systems',c('sys'),'DNS and NTP',ntp,'UDP 53 and UDP 123. Accurate time matters for evidence.'],
+  ['allow','IT admins',corp,'Network management',c('mgmt'),'SSH TCP 22 to switches, from admin hosts only.'],
+  ['deny','Cameras',c('cam'),'Internet','any','Cameras never reach the internet.']);
+ if(has('acs'))r.push(['deny','Access control',c('acs'),'Internet','any','Unless the platform is cloud managed, then allow its hosts only.']);
+ r.push(['deny','Security VLANs','all security subnets','Customer users',corp,'Devices cannot start connections into the business network.'],['deny','Any','any','Any','any','Default deny between VLANs.']);
+ return r;
+}
+
+function handoff(p){
+ const s=S.s,L=[`# Security network handoff: ${s.name}`,'',`Prepared for the customer IT team. ${p.devs.length} devices on ${p.sws.length} access switch${p.sws.length>1?'es':''}.`,'','## VLANs and subnets','','| VLAN | Name | Subnet | Gateway | Devices |','|---|---|---|---|---|'];
+ VL.forEach(y=>L.push(`| ${p.oct(y[0])} | ${y[1]} | ${p.sub(y[0])}.0/24 | ${p.sub(y[0])}.${p.gwh} | ${y[0]==='mgmt'?p.sws.length+' switches':p.devs.filter(d=>d.v===y[0]).length} |`));
+ L.push('',`Gateways live on the customer core switch or firewall. Unused ports sit shut down in VLAN ${p.oct('park')}.`,'','## Switches','','| Switch | Mgmt IP | Ports used | PoE draw | Est. traffic |','|---|---|---|---|---|');
+ p.sws.forEach(x=>L.push(`| ${x.name} | ${x.ip} | ${x.used} of ${p.usable} | ${Math.round(x.poe)} W of ${p.budget} W | ${Math.round(x.mbps)} Mbps |`));
+ L.push('','## Firewall requests','','| Action | From | To | Notes |','|---|---|---|---|');
+ rules(p).forEach(r=>L.push(`| ${r[0]} | ${r[1]} ${r[2]} | ${r[3]} ${r[4]} | ${r[5]} |`));
+ L.push('','## Device schedule','','| Device | Type | IP | Switch | Port | PoE |','|---|---|---|---|---|---|');
+ p.devs.forEach(d=>L.push(`| ${d.id} | ${d.type} | ${d.ip} | SW${pad(d.sw,2)} | ${d.port} | ${d.w} W |`));
+ L.push('',`Recording estimate: ${Math.round(p.camM)} Mbps of camera video, about ${p.tb.toFixed(1)} TB for ${s.ret} days. Actual bitrates depend on scene, codec and settings.`);
+ return L.join('\n');
+}
+
+function figs(p){
+ $('figs').innerHTML=[[p.devs.length,'devices'],[p.sws.length,p.sws.length>1?'switches':'switch'],[Math.round(p.poe)+' W','PoE draw'],[Math.round(p.camM)+' Mbps','camera video'],[p.tb.toFixed(1)+' TB',`for ${S.s.ret} days`]].map(f=>`<div class="fg"><b>${f[0]}</b><span>${f[1]}</span></div>`).join('');
+ $('racks').innerHTML=p.sws.map(x=>{
+  const cells=x.ports.map((d,i)=>{const n=i+1;if(i>=p.usable)return`<div class="pt up" title="Port ${n}: reserved for uplink"></div>`;
+   return d?`<div class="pt ${d.v}${d.over?' over':''}" title="Port ${n}: ${esc(d.id)}, ${d.w} W"></div>`:`<div class="pt" title="Port ${n}: unused"></div>`}).join('');
+  const pct=p.budget?Math.min(100,x.poe/p.budget*100):0,lim=p.budget?p.cap/p.budget*100:0;
+  return`<div class="sw"><div class="swh"><span><b>${esc(x.name)}</b> &nbsp;${x.ip}</span><span>${x.used} of ${p.usable} ports</span></div><div class="fp"><div class="ports">${cells}</div></div>
+  <div class="meter" role="img" aria-label="PoE ${Math.round(x.poe)} of ${p.budget} watts"><i class="${x.poe>p.cap?'hot':''}" style="width:${pct}%"></i><u style="left:${lim}%"></u></div>
+  <div class="mt"><span>PoE ${Math.round(x.poe)} W of ${p.budget} W, limit ${Math.round(p.cap)} W</span><span>${Math.round(x.mbps)} Mbps up</span></div></div>`}).join('');
+ $('warns').innerHTML=p.warn.length?p.warn.map(w=>`<li>${esc(w)}</li>`).join(''):'<li class="ok">Every device fits within the PoE limit, ports and address space.</li>';
+}
+
+const TABS=[['ip','IP plan'],['ports','Port map'],['cisco','Switch config'],['sheet','Settings sheet'],['fw','Firewall rules'],['hand','IT handoff']];
+function copyBtn(id){return`<button class="b" data-copy="${id}">Copy</button>`}
+function out(p){
+ $('tabs').innerHTML=TABS.map(t=>`<button role="tab" aria-selected="${t[0]===tab}" data-tab="${t[0]}">${t[1]}</button>`).join('');
+ let h='';
+ if(tab==='ip'){
+  h=`<h2>${VL.length} VLANs, one /24 each</h2><div class="scroll"><table class="stack"><thead><tr><th>VLAN</th><th>Role</th><th>Subnet</th><th>Gateway</th><th class="n">Devices</th><th>Range used</th></tr></thead><tbody>`+
+  VL.map(y=>{const ds=y[0]==='mgmt'?p.sws.map(x=>x.ip):p.devs.filter(d=>d.v===y[0]).map(d=>d.ip);
+   return`<tr><td data-l="VLAN" class="nw"><span class="chip" style="background:var(--${y[0]})"></span>${p.oct(y[0])} ${y[1]}</td><td data-l="Role">${y[2]}</td><td data-l="Subnet" class="mono nw">${p.sub(y[0])}.0/24</td><td data-l="Gateway" class="mono nw">${p.sub(y[0])}.${p.gwh}</td><td data-l="Devices" class="n">${ds.length}</td><td data-l="Range" class="mono nw">${ds.length?esc(ds[0])+(ds.length>1?' to .'+esc(ds[ds.length-1]).split('.').pop():''):'none'}</td></tr>`}).join('')+
+  `</tbody></table></div><p class="note">Addresses .11 to .250 go to devices. Keep .2 to .10 for the customer's core, firewall and spares. Hand out IPs statically or as DHCP reservations.</p>`;
+ }else if(tab==='ports'){
+  h=`<h2>Port and address schedule</h2><div class="scroll"><table class="stack"><thead><tr><th>Device</th><th>Type</th><th>Switch / port</th><th>VLAN</th><th>IP</th><th class="n">PoE</th></tr></thead><tbody>`+
+  p.devs.map(d=>`<tr><td data-l="Device" class="nw"><span class="chip" style="background:var(--${d.v})"></span>${esc(d.id)}</td><td data-l="Type">${esc(d.type)}</td><td data-l="Switch / port" class="nw">SW${pad(d.sw,2)} port ${d.port}</td><td data-l="VLAN" class="n">${p.oct(d.v)}</td><td data-l="IP" class="mono nw">${esc(d.ip)}</td><td data-l="PoE" class="n">${d.w} W</td></tr>`).join('')+`</tbody></table></div>`;
+ }else if(tab==='cisco'){
+  const k=S.w.vend,V=VEND[k];
+  h=`<div class="cp"><h2 style="margin:0">${V.n} config, ${p.sws.length} switch${p.sws.length>1?'es':''}</h2>${copyBtn('cfg')}</div><div class="seg" role="radiogroup" aria-label="Switch platform">${Object.entries(VEND).map(([kk,vv])=>`<button role="radio" aria-checked="${kk===k}" data-vend="${kk}">${vv.n}</button>`).join('')}</div><pre id="cfg">${esc(p.sws.map(x=>GEN[k](p,x)).join('\n\n'))}</pre><p class="note">${V.note} Change the admin password before you paste it. PoE is switched off on ports with no PoE device.</p>`;
+ }else if(tab==='sheet'){
+  h=`<h2>Settings sheet for UniFi and other GUI switches</h2><h3>Networks to create</h3><div class="scroll"><table class="stack"><thead><tr><th>Name</th><th>VLAN ID</th><th>Subnet</th><th>DHCP</th></tr></thead><tbody>`+
+  VL.map(y=>`<tr><td data-l="Name">${y[1]}</td><td data-l="VLAN ID" class="n">${p.oct(y[0])}</td><td data-l="Subnet" class="mono nw">${p.sub(y[0])}.0/24</td><td data-l="DHCP">Off, static or reservations</td></tr>`).join('')+`</tbody></table></div>`+
+  p.sws.map(x=>{const groups=[];x.ports.forEach((d,i)=>{if(i>=p.usable)return;const k=d?d.v+(d.w>0?'+':''):'park';const g=groups[groups.length-1];if(g&&g.k===k&&g.b===i)g.b=i+1;else groups.push({k,a:i+1,b:i+1})});
+   return`<h3>${esc(x.name)} port profiles</h3><ul>`+groups.map(g=>{const vk=g.k.replace('+',''),vl=VL.find(y=>y[0]===vk);return`<li>Ports ${g.a}${g.b>g.a?' to '+g.b:''}: ${vl?`${vl[1]} (VLAN ${p.oct(vk)}), untagged, PoE ${g.k.endsWith('+')?'on':'off'}`:'disabled'}</li>`}).join('')+`<li>Uplink: trunk, all security VLANs tagged</li></ul>`}).join('')+
+  `<p class="note">Turn on port isolation for camera ports where the switch supports it.</p>`;
+ }else if(tab==='fw'){
+  h=`<h2>Firewall requests for customer IT</h2><div class="scroll"><table class="stack"><thead><tr><th>Action</th><th>From</th><th>To</th><th>Why</th></tr></thead><tbody>`+
+  rules(p).map(r=>`<tr><td data-l="Action" class="${r[0]}">${r[0]==='allow'?'Allow':'Deny'}</td><td data-l="From">${esc(r[1])}<br><span class="mono">${esc(r[2])}</span></td><td data-l="To">${esc(r[3])}<br><span class="mono">${esc(r[4])}</span></td><td data-l="Why">${esc(r[5])}</td></tr>`).join('')+`</tbody></table></div>`;
+ }else{
+  h=`<div class="cp"><h2 style="margin:0">IT handoff, ready to paste</h2>${copyBtn('ho')}</div><pre id="ho">${esc(handoff(p))}</pre><p class="note">Written in Markdown, so it pastes cleanly into an email, ticket or doc.</p>`;
+ }
+ $('out').innerHTML=h;
+}
+
+function form(){
+ const map={'s-name':['s','name'],'s-code':['s','code'],'s-num':['s','num'],'s-gw':['s','gw'],'s-ret':['s','ret'],'s-corp':['s','corp'],'s-ntp':['s','ntp'],'s-dom':['s','dom'],
+  'w-vend':['w','vend'],'w-ports':['w','ports'],'w-budget':['w','budget'],'w-maxw':['w','maxw'],'w-head':['w','head'],'w-upl':['w','upl'],'w-res':['w','res'],
+  'v-mgmt':['v','mgmt'],'v-sys':['v','sys'],'v-cam':['v','cam'],'v-acs':['v','acs'],'v-park':['v','park']};
+ Object.entries(map).forEach(([id,[g,k]])=>{const el=$(id);el.value=S[g][k];el.oninput=()=>{S[g][k]=el.value;if(id==='w-vend')vendFields();update()}});
+ vendFields();
+ ['w-ifp','w-up'].forEach(id=>{$(id).oninput=()=>{S.vn[S.w.vend][id==='w-ifp'?'ifp':'up']=$(id).value;update()}});
+}
+function vendFields(){const k=S.w.vend;if(!S.vn[k])S.vn[k]=clone(SAMPLE.vn[k]);$('w-vend').value=k;$('w-ifp').value=S.vn[k].ifp;$('w-up').value=S.vn[k].up;$('w-up').placeholder='auto: '+VEND[k].up({ports:Math.round(num(S.w.ports,24))})}
+function devForm(){
+ const opts=t=>Object.entries(TYPES).map(([k,T])=>`<option value="${k}"${k===t?' selected':''}>${T.n}</option>`).join('');
+ $('devs').innerHTML=S.d.map((r,i)=>`<div class="dev"><select id="d-t-${i}" aria-label="Type" data-i="${i}" data-k="t">${opts(r.t)}</select><input id="d-q-${i}" aria-label="Quantity" type="number" min="0" data-i="${i}" data-k="q" value="${r.q}"><input id="d-w-${i}" aria-label="Watts" type="number" step="0.5" min="0" data-i="${i}" data-k="w" value="${r.w}"><input id="d-m-${i}" aria-label="Mbps" type="number" step="0.5" min="0" data-i="${i}" data-k="m" value="${r.m}"><button class="x" data-del="${i}" aria-label="Remove row">×</button></div>`).join('')||'<p class="note">No devices yet. Add one to start.</p>';
+}
+$('devs').addEventListener('input',e=>{const el=e.target,i=el.dataset.i,k=el.dataset.k;if(i===undefined)return;const r=S.d[i];
+ if(k==='t'){r.t=el.value;r.w=TYPES[el.value].w;r.m=TYPES[el.value].m;devForm()}else r[k]=el.value;update()});
+$('devs').addEventListener('click',e=>{const i=e.target.dataset.del;if(i===undefined)return;S.d.splice(+i,1);devForm();update()});
+$('add').onclick=()=>{S.d.push({t:'fixed',q:1,w:TYPES.fixed.w,m:TYPES.fixed.m});devForm();update()};
+$('tabs').addEventListener('click',e=>{const t=e.target.dataset.tab;if(!t)return;tab=t;out(R)});
+$('out').addEventListener('click',e=>{const vk=e.target.dataset.vend;if(vk){S.w.vend=vk;vendFields();update();return}const id=e.target.dataset.copy;if(!id)return;const b=e.target,txt=$(id).textContent;
+ const done=m=>{b.textContent=m;setTimeout(()=>b.textContent='Copy',1600)};
+ try{navigator.clipboard.writeText(txt).then(()=>done('Copied'),()=>{selectPre(id);done('Selected, press copy')})}catch(err){selectPre(id);done('Selected, press copy')}});
+function selectPre(id){try{const r=document.createRange();r.selectNodeContents($(id));const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}catch(e){}}
+$('cpjson').onclick=()=>{const t=$('json');t.value=JSON.stringify(S);try{navigator.clipboard.writeText(t.value).then(()=>{$('cpjson').textContent='Copied'},()=>t.select())}catch(e){t.select()}setTimeout(()=>$('cpjson').textContent='Copy job',1600)};
+$('ldjson').onclick=()=>{try{const x=JSON.parse($('json').value);if(!x.s||!x.d||!x.w||!x.v)throw 0;S=fix(x);form();devForm();update();$('ldjson').textContent='Loaded'}catch(e){$('ldjson').textContent='Not a saved job'}setTimeout(()=>$('ldjson').textContent='Load pasted job',1600)};
+$('sample').onclick=()=>{S=clone(SAMPLE);form();devForm();update()};
+function update(){R=plan();figs(R);out(R);$('json').value=JSON.stringify(S);save()}
+form();devForm();update();
+}
+</script>
+</body>
+</html>
