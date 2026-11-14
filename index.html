@@ -35,11 +35,22 @@ h3{font:600 16px/1.3 Inter,sans-serif;margin:18px 0 8px}
 .sw{background:#1b1f1e;border-radius:10px;padding:12px 14px 12px;box-shadow:inset 0 1px 0 #ffffff22,0 2px 0 #00000055}
 .swh{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;font-size:14px;color:#d7e4df;margin-bottom:8px}
 .swh b{color:#fff;font-weight:600}
-.fp{overflow-x:auto;padding-bottom:2px}
+.fp{overflow-x:auto}
 .ports{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);gap:5px;min-width:max-content;justify-content:start}
-.pt{width:30px;height:22px;border-radius:3px;background:var(--park);border:1px solid #00000066;box-shadow:inset 0 -3px 0 #00000040}
+.pt{width:30px;height:22px;padding:0;cursor:pointer;border-radius:3px;background:var(--park);border:1px solid #00000066;box-shadow:inset 0 -3px 0 #00000040}
+.pt:hover{filter:brightness(1.15)}
+.pt.sel{outline:2px solid #fff;outline-offset:2px}
+.pt:focus-visible{outline:2px solid #8fd3ff;outline-offset:2px}
+.fp{padding:4px 4px 6px}
+.pd{margin-top:10px;background:#ffffff14;border-radius:8px;padding:8px 12px;font-size:14px;color:#eaf6f0;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.pd b{color:#fff}
+.pd label{color:#bcd9ce;display:flex;align-items:center;gap:8px}
+.pd select{width:auto;min-height:40px;margin:0}
+.free{color:var(--mgmt)}
+.hint{font-size:14px;color:#bcd9ce;margin:10px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.lk{font:600 14px Inter,sans-serif;background:none;border:1px solid #ffffff55;color:#fff;border-radius:999px;min-height:36px;padding:0 12px;cursor:pointer}
 .pt.cam{background:var(--cam)}.pt.acs{background:var(--acs)}.pt.sys{background:var(--sys)}.pt.up{background:#fff}
-.pt.over{outline:2px solid #ff3b30;outline-offset:1px}
+.pt.over{box-shadow:inset 0 0 0 2px #ff3b30}
 .meter{position:relative;height:10px;background:#ffffff1a;border-radius:5px;margin-top:10px;overflow:hidden}
 .meter i{position:absolute;inset:0 auto 0 0;background:var(--mgmt);border-radius:5px}
 .meter i.hot{background:var(--acs)}
@@ -59,11 +70,23 @@ label{display:block;font-size:13px;color:var(--mute);font-weight:500}
 input,select,textarea{font:16px Inter,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 9px;width:100%;margin-top:3px;min-height:42px}
 input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid #0d7680;outline-offset:1px}
 .full{grid-column:1/-1}
-.dev{display:grid;grid-template-columns:minmax(0,1fr) 64px 64px 64px 36px;gap:6px;align-items:end;padding:8px 0;border-bottom:1px solid var(--line)}
+.dev{display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:8px;align-items:end;padding:12px 0;border-bottom:1px solid var(--line)}
+.dev .f{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr);gap:8px}
+.q{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;margin-top:3px}
+.q input{margin:0;border-radius:0;text-align:center;border-inline:0;padding-inline:2px;-moz-appearance:textfield}
+.q input::-webkit-inner-spin-button{-webkit-appearance:none}
+.q button{min-height:42px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:20px;cursor:pointer}
+.q button:first-child{border-radius:6px 0 0 6px}.q button:last-child{border-radius:0 6px 6px 0}
+.q button:hover{background:var(--line)}
+details.panel>summary{font:700 18px/1.3 "Inter Tight",Inter,sans-serif}
+details.panel[open]>summary{margin-bottom:12px}
+.more{margin-top:14px}
+.more[open]>summary{margin-bottom:10px}
+tr.grp td{background:var(--panel);font-weight:600;font-size:14px}
+tr.grp span{font-weight:400;color:var(--mute)}
 .dev select{min-width:0}
 .dev .x{min-height:42px;border:0;background:none;color:var(--mute);font-size:20px;cursor:pointer;border-radius:6px}
 .dev .x:hover{background:var(--line);color:var(--ink)}
-.dvh{display:grid;grid-template-columns:minmax(0,1fr) 64px 64px 64px 36px;gap:6px;font-size:13px;color:var(--mute)}
 button.b{font:600 15px Inter,sans-serif;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
 button.b:hover{border-color:var(--mute)}
 button.p{background:var(--rack);color:#fff;border-color:var(--rack)}
@@ -88,8 +111,8 @@ pre{background:var(--panel);border:1px solid var(--line);border-radius:8px;paddi
 .cp{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
 details summary{cursor:pointer;font-weight:600;min-height:32px}
 footer{border-top:1px solid var(--line);color:var(--mute);font-size:14px}
-@media(max-width:900px){.pt{width:20px;height:16px}.main{grid-template-columns:minmax(0,1fr)}.head{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:600px){table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:2px 0;text-align:right}.stack td::before{content:attr(data-l);color:var(--mute);text-align:left}.dev,.dvh{grid-template-columns:minmax(0,1fr) 52px 52px 52px 32px}.pt{width:16px;height:14px}}
+@media(max-width:900px){.pt{width:22px;height:20px}.ports{gap:4px}.main{grid-template-columns:minmax(0,1fr)}.head{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:2px 0;text-align:right}.stack td::before{content:attr(data-l);color:var(--mute);text-align:left}.pm thead{display:none}.pm tr{display:grid;grid-template-columns:28px minmax(0,1fr) auto;column-gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}.pm td{border:0;padding:0}.pm td:nth-child(1){grid-row:1/3;align-self:center;font-weight:600}.pm td:nth-child(2){grid-area:1/2}.pm td:nth-child(3){grid-area:2/2;color:var(--mute)}.pm td:nth-child(4){display:none}.pm td:nth-child(5){grid-area:1/3;text-align:right}.pm td:nth-child(6){grid-area:2/3;color:var(--mute)}.pm tr.grp{display:block;padding:0;border:0}.pm tr.grp td{display:block;padding:8px;font-weight:600;color:var(--ink)}}
 @media(prefers-reduced-motion:no-preference){.meter i{transition:width .35s ease}}
 </style>
 </head>
@@ -111,6 +134,7 @@ footer{border-top:1px solid var(--line);color:var(--mute);font-size:14px}
    <span><i style="background:#fff"></i>Uplink</span>
    <span><i style="background:var(--park);border:1px solid #ffffff44"></i>Unused, shut down</span>
   </div>
+  <p class="hint" id="hint"></p>
   <ul class="warns" id="warns"></ul>
  </div>
 </section>
@@ -133,10 +157,9 @@ footer{border-top:1px solid var(--line);color:var(--mute);font-size:14px}
    </div>
    <div class="panel">
     <h2>Devices</h2>
-    <div class="dvh"><span>Type</span><span>Qty</span><span>Watts</span><span>Mbps</span><span></span></div>
     <div id="devs"></div>
     <div class="row"><button class="b" id="add">Add device</button></div>
-    <p class="note">Watts and Mbps start from typical values. Use the spec sheet figures for the actual models.</p>
+    <p class="note">Picking a type fills in typical watts and Mbps. Replace them with the spec sheet figures for your models.</p>
    </div>
    <div class="panel">
     <h2>Switches</h2>
@@ -145,15 +168,19 @@ footer{border-top:1px solid var(--line);color:var(--mute);font-size:14px}
      <div><label for="w-ports">Access ports per switch</label><select id="w-ports"><option>8</option><option>12</option><option>16</option><option>24</option><option>48</option></select></div>
      <div><label for="w-budget">PoE budget (W)</label><input id="w-budget" type="number" min="0"></div>
      <div><label for="w-maxw">Max watts per port</label><select id="w-maxw"><option value="15.4">15.4 (802.3af)</option><option value="30">30 (802.3at)</option><option value="60">60 (802.3bt T3)</option><option value="90">90 (802.3bt T4)</option></select></div>
+    </div>
+    <details class="more"><summary>More switch settings</summary>
+    <div class="grid2">
      <div><label for="w-head">Use up to (% of budget)</label><input id="w-head" type="number" min="10" max="100"></div>
      <div><label for="w-upl">Uplink speed</label><select id="w-upl"><option value="1000">1 Gbps</option><option value="10000">10 Gbps</option></select></div>
      <div><label for="w-res">Access ports kept for uplink</label><input id="w-res" type="number" min="0" max="4"></div>
      <div><label for="w-ifp">Port name prefix</label><input id="w-ifp" class="mono"></div>
      <div><label for="w-up">Uplink interface</label><input id="w-up" class="mono" placeholder="auto"></div>
     </div>
+    </details>
    </div>
-   <div class="panel">
-    <h2>VLAN IDs</h2>
+   <details class="panel">
+    <summary>VLAN IDs</summary>
     <div class="grid2">
      <div><label for="v-mgmt">Network management</label><input id="v-mgmt" type="number"></div>
      <div><label for="v-sys">Security systems</label><input id="v-sys" type="number"></div>
@@ -162,15 +189,13 @@ footer{border-top:1px solid var(--line);color:var(--mute);font-size:14px}
      <div class="full"><label for="v-park">Unused port parking VLAN</label><input id="v-park" type="number"></div>
     </div>
     <p class="note">Subnets follow 10.site.VLAN.0/24, so each VLAN ID maps to its third octet.</p>
-   </div>
-   <div class="panel">
-    <details>
+   </details>
+   <details class="panel">
      <summary>Save or load a job</summary>
      <p class="note">Copy this text to keep the job, or paste a saved job in and load it.</p>
      <textarea id="json" rows="6" class="mono"></textarea>
      <div class="row"><button class="b" id="cpjson">Copy job</button><button class="b" id="ldjson">Load pasted job</button><button class="b" id="sample">Reset to sample</button></div>
-    </details>
-   </div>
+   </details>
   </div>
 
   <div>
@@ -186,6 +211,9 @@ footer{border-top:1px solid var(--line);color:var(--mute);font-size:14px}
 const TYPES={
  fixed:{n:'Fixed camera',v:'cam',w:8,m:4,p:'CAM'},
  ir:{n:'Camera with IR or heater',v:'cam',w:13,m:4,p:'CAM'},
+ k4:{n:'4K camera',v:'cam',w:13,m:8,p:'CAM'},
+ fish:{n:'Fisheye camera',v:'cam',w:13,m:8,p:'CAM'},
+ lpr:{n:'License plate camera',v:'cam',w:15,m:4,p:'LPR'},
  multi:{n:'Multi-sensor camera',v:'cam',w:25,m:12,p:'MSC'},
  ptz:{n:'PTZ camera',v:'cam',w:30,m:6,p:'PTZ'},
  door:{n:'Door controller',v:'acs',w:15,m:.1,p:'DOOR'},
@@ -198,13 +226,14 @@ const VL=[['mgmt','NET-MGMT','Network management'],['sys','SEC-SYSTEMS','Securit
 const SAMPLE={s:{name:'Oakridge Self Storage',code:'OAK',num:12,gw:'254',ret:30,corp:'10.12.10.0/24',ntp:'10.12.10.5',dom:'oakridge.local'},
  w:{vend:'cisco',ports:24,budget:370,maxw:'30',head:80,upl:'10000',res:0},
  vn:{cisco:{ifp:'GigabitEthernet1/0/',up:''},aruba:{ifp:'1/1/',up:''},arista:{ifp:'Ethernet',up:''},mikrotik:{ifp:'ether',up:''}},
- v:{mgmt:99,sys:100,cam:101,acs:102,park:999},
+ v:{mgmt:99,sys:100,cam:101,acs:102,park:999},pin:{},
  d:[{t:'fixed',q:14,w:8,m:4},{t:'ir',q:6,w:13,m:4},{t:'ptz',q:2,w:30,m:6},{t:'door',q:4,w:15,m:.1},{t:'intercom',q:1,w:13,m:2},{t:'nvr',q:1,w:0,m:0},{t:'ws',q:1,w:0,m:0}]};
+const GRP=[['cam','Cameras'],['acs','Access control'],['sys','Servers']];
 const KEY='cnp.v1';
 const VEND={cisco:{n:'Cisco IOS-XE',up:p=>'TenGigabitEthernet1/1/1',note:'Built for Catalyst 9200 and 9300 style access switches.'},aruba:{n:'Aruba AOS-CX',up:p=>`1/1/${p.ports+1}`,note:'Built for Aruba CX 6000, 6100 and 6200 style access switches.'},arista:{n:'Arista EOS',up:p=>`Ethernet${p.ports+1}`,note:'Built for Arista 720XP style PoE access switches.'},mikrotik:{n:'MikroTik RouterOS 7',up:p=>'sfp-sfpplus1',note:'Built for CRS3xx and CRS5xx switches using bridge VLAN filtering with hardware offload. Reset the switch to an empty config first, because the factory config already holds every port in its own bridge. VLAN filtering and the unused-port shutdown come last, so paste it from a console or a port you will not lose.'}};
 const clone=o=>JSON.parse(JSON.stringify(o));
-let S=clone(SAMPLE),tab='ip',R=null;
-const fix=x=>{if(!x.vn){x.vn=clone(SAMPLE.vn);if(x.w.ifp)x.vn.cisco.ifp=x.w.ifp;if(x.w.up)x.vn.cisco.up=x.w.up}if(!x.w.vend)x.w.vend='cisco';return x};
+let S=clone(SAMPLE),tab='ip',R=null,SEL=null;
+const fix=x=>{if(!x.vn){x.vn=clone(SAMPLE.vn);if(x.w.ifp)x.vn.cisco.ifp=x.w.ifp;if(x.w.up)x.vn.cisco.up=x.w.up}if(!x.w.vend)x.w.vend='cisco';if(!x.pin)x.pin={};return x};
 try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&x.s&&x.d&&x.w&&x.v)S=fix(x)}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const $=id=>document.getElementById(id);
@@ -228,14 +257,16 @@ function plan(){
   for(let i=0;i<q;i++){cnt[T.p]=(cnt[T.p]||0)+1;const h=hostN[T.v]++;
    devs.push({id:`${T.p}-${pad(cnt[T.p],3)}`,type:T.n,v:T.v,w:num(r.w,0),m:num(r.m,0),ip:h<=250?`${sub(T.v)}.${h}`:'no address left'})}});
  VL.forEach(x=>{const used=hostN[x[0]]-11;if(used>240)warn.push(`${x[2]} needs ${used} addresses but a /24 holds 240 here. Split the devices across two VLANs.`)});
- const sws=[];let cur=null;
- const newSw=()=>{cur={n:sws.length+1,ports:Array(ports).fill(null),poe:0,mbps:0,used:0};sws.push(cur)};
- devs.forEach(d=>{
-  if(d.w>maxw){d.over=true;warn.push(`${d.id} draws ${d.w} W but ports supply up to ${maxw} W. Use an 802.3bt switch or a midspan injector.`)}
-  if(!cur||cur.used>=usable||(d.w>0&&cur.poe+d.w>cap&&cur.poe>0))newSw();
-  cur.ports[cur.used]=d;cur.used++;cur.poe+=d.w;cur.mbps+=d.m;d.sw=cur.n;d.port=cur.used});
+ const sws=[],pins=S.pin||{};
+ const newSw=()=>{const x={n:sws.length+1,devs:[],poe:0,mbps:0};sws.push(x);return x};
+ const put=(x,d)=>{x.devs.push(d);x.poe+=d.w;x.mbps+=d.m;d.sw=x.n};
+ devs.forEach((d,i)=>{d.i=i;if(d.w>maxw){d.over=true;warn.push(`${d.id} draws ${d.w} W but ports supply up to ${maxw} W. Use an 802.3bt switch or a midspan injector.`)}});
+ devs.forEach(d=>{const n=Math.min(20,Math.round(num(pins[d.id],0)));if(n<1)return;while(sws.length<n)newSw();if(sws[n-1].devs.length<usable){put(sws[n-1],d);d.pinned=true}});
+ devs.forEach(d=>{if(d.sw)return;put(sws.find(x=>x.devs.length<usable&&(d.w===0||x.poe===0||x.poe+d.w<=cap))||newSw(),d)});
  if(!sws.length)newSw();
  sws.forEach(x=>{x.name=`${(s.code||'SITE').toUpperCase()}-SEC-SW${pad(x.n,2)}`;x.ip=`${sub('mgmt')}.${10+x.n}`;
+  x.devs.sort((a,b)=>a.i-b.i);x.ports=Array(ports).fill(null);x.devs.forEach((d,i)=>{x.ports[i]=d;d.port=i+1});x.used=x.devs.length;
+  if(x.poe>cap+.01)warn.push(`${x.name} draws ${Math.round(x.poe)} W, over its ${Math.round(cap)} W limit. Move a device to another switch.`);
   if(x.mbps>num(w.upl,1000)*.7)warn.push(`${x.name} sends about ${Math.round(x.mbps)} Mbps, over 70% of its uplink. Use a faster uplink or spread the cameras out.`)});
  if(sws.length>1)warn.push(`This job needs ${sws.length} switches at ${w.head}% of a ${budget} W budget and ${usable} access ports each.`);
  if(!devs.some(d=>d.type===TYPES.nvr.n))warn.push('No NVR or VMS server is listed. Add one, or note where recording happens.');
@@ -335,13 +366,23 @@ function handoff(p){
 
 function figs(p){
  $('figs').innerHTML=[[p.devs.length,'devices'],[p.sws.length,p.sws.length>1?'switches':'switch'],[p.devs.length+' of '+p.sws.length*p.usable,'ports used'],[Math.round(p.poe)+' W','PoE draw'],[Math.round(p.camM)+' Mbps','camera video'],[p.tb.toFixed(1)+' TB',`for ${S.s.ret} days`]].map(f=>`<div class="fg"><b>${f[0]}</b><span>${f[1]}</span></div>`).join('');
+ if(SEL&&SEL.id){const d=p.devs.find(d=>d.id===SEL.id);SEL=d?{id:d.id,sw:d.sw,port:d.port}:null}
+ if(SEL&&(SEL.sw>p.sws.length||SEL.port>p.ports))SEL=null;
  $('racks').innerHTML=p.sws.map(x=>{
-  const cells=x.ports.map((d,i)=>{const n=i+1;if(i>=p.usable)return`<div class="pt up" title="Port ${n}: reserved for uplink"></div>`;
-   return d?`<div class="pt ${d.v}${d.over?' over':''}" title="Port ${n}: ${esc(d.id)}, ${d.w} W"></div>`:`<div class="pt" title="Port ${n}: unused"></div>`}).join('');
-  const pct=p.budget?Math.min(100,x.poe/p.budget*100):0,lim=p.budget?p.cap/p.budget*100:0;
-  return`<div class="sw"><div class="swh"><span><b>${esc(x.name)}</b> &nbsp;${x.ip}</span><span>${x.used} of ${p.usable} ports</span></div><div class="fp"><div class="ports">${cells}</div></div>
+  const cells=x.ports.map((d,i)=>{const n=i+1,sel=SEL&&SEL.sw===x.n&&SEL.port===n?' sel':'',at=`data-sw="${x.n}" data-port="${n}"`;
+   if(i>=p.usable)return`<button class="pt up${sel}" ${at} aria-label="Port ${n}, reserved for uplink"></button>`;
+   return d?`<button class="pt ${d.v}${d.over?' over':''}${sel}" ${at} aria-label="Port ${n}, ${esc(d.id)}, ${d.w} watts"></button>`:`<button class="pt${sel}" ${at} aria-label="Port ${n}, unused"></button>`}).join('');
+  const pct=p.budget?Math.min(100,x.poe/p.budget*100):0,lim=p.budget?p.cap/p.budget*100:0,free=p.usable-x.used,room=Math.round(p.cap-x.poe);
+  let pd='';
+  if(SEL&&SEL.sw===x.n){const d=x.ports[SEL.port-1];
+   if(d){const opts=p.sws.map(y=>`<option value="${y.n}"${y.n===x.n?' selected':''}>${esc(y.name)}</option>`).join('')+`<option value="${p.sws.length+1}">A new switch</option>`+(d.pinned?'<option value="0">Automatic placement</option>':'');
+    pd=`<div class="pd"><span><b>Port ${SEL.port}: ${esc(d.id)}</b> ${esc(d.type)}</span><span>VLAN ${p.oct(d.v)}</span><span class="mono">${esc(d.ip)}</span><span>${d.w} W, ${d.m} Mbps</span><label for="mv">Move to <select id="mv" data-move="${esc(d.id)}">${opts}</select></label></div>`}
+   else pd=`<div class="pd"><span><b>Port ${SEL.port}</b> ${SEL.port>p.usable?'Reserved for the uplink':`Unused. Shut down and parked in VLAN ${p.oct('park')}`}</span></div>`}
+  return`<div class="sw"><div class="swh"><span><b>${esc(x.name)}</b> &nbsp;${x.ip}</span><span>${x.used} of ${p.usable} ports${free>0?`, <span class="free">${free} free for growth</span>`:''}</span></div><div class="fp"><div class="ports">${cells}</div></div>${pd}
   <div class="meter" role="img" aria-label="PoE ${Math.round(x.poe)} of ${p.budget} watts"><i class="${x.poe>p.cap?'hot':''}" style="width:${pct}%"></i><u style="left:${lim}%"></u></div>
-  <div class="mt"><span>PoE ${Math.round(x.poe)} W of ${p.budget} W, limit ${Math.round(p.cap)} W</span><span>${Math.round(x.mbps)} Mbps up</span></div></div>`}).join('');
+  <div class="mt"><span>PoE ${Math.round(x.poe)} W of ${p.budget} W${room>=0?`, ${room} W to spare under the ${Math.round(p.cap)} W limit`:`, ${-room} W over the ${Math.round(p.cap)} W limit`}</span><span>${Math.round(x.mbps)} Mbps up</span></div></div>`}).join('');
+ const moved=p.devs.filter(d=>d.pinned).length;
+ $('hint').innerHTML=`<span>Tap a port to see its device or move it to another switch.</span>${moved?`<button class="lk" id="unpin">Undo ${moved} move${moved>1?'s':''}</button>`:''}`;
  $('warns').innerHTML=p.warn.length?p.warn.map(w=>`<li>${esc(w)}</li>`).join(''):'<li class="ok">Every device fits within the PoE limit, ports and address space.</li>';
 }
 
@@ -356,8 +397,9 @@ function out(p){
    return`<tr><td data-l="VLAN" class="nw"><span class="chip" style="background:var(--${y[0]})"></span>${p.oct(y[0])} ${y[1]}</td><td data-l="Role">${y[2]}</td><td data-l="Subnet" class="mono nw">${p.sub(y[0])}.0/24</td><td data-l="Gateway" class="mono nw">${p.sub(y[0])}.${p.gwh}</td><td data-l="Devices" class="n">${ds.length}</td><td data-l="Range" class="mono nw">${ds.length?esc(ds[0])+(ds.length>1?' to .'+esc(ds[ds.length-1]).split('.').pop():''):'none'}</td></tr>`}).join('')+
   `</tbody></table></div><p class="note">Addresses .11 to .250 go to devices. Keep .2 to .10 for the customer's core, firewall and spares. Hand out IPs statically or as DHCP reservations.</p>`;
  }else if(tab==='ports'){
-  h=`<h2>Port and address schedule</h2><div class="scroll"><table class="stack"><thead><tr><th>Device</th><th>Type</th><th>Switch / port</th><th>VLAN</th><th>IP</th><th class="n">PoE</th></tr></thead><tbody>`+
-  p.devs.map(d=>`<tr><td data-l="Device" class="nw"><span class="chip" style="background:var(--${d.v})"></span>${esc(d.id)}</td><td data-l="Type">${esc(d.type)}</td><td data-l="Switch / port" class="nw">SW${pad(d.sw,2)} port ${d.port}</td><td data-l="VLAN" class="n">${p.oct(d.v)}</td><td data-l="IP" class="mono nw">${esc(d.ip)}</td><td data-l="PoE" class="n">${d.w} W</td></tr>`).join('')+`</tbody></table></div>`;
+  h=`<h2>Port and address schedule</h2><div class="scroll"><table class="pm"><thead><tr><th>Port</th><th>Device</th><th>Type</th><th class="n">VLAN</th><th>IP</th><th class="n">PoE</th></tr></thead><tbody>`+
+  p.sws.map(x=>`<tr class="grp"><td colspan="6">${esc(x.name)} <span>&nbsp;${x.ip} &nbsp; ${x.used} of ${p.usable} ports &nbsp; ${Math.round(x.poe)} W</span></td></tr>`+
+   (x.devs.map(d=>`<tr><td data-l="Port" class="n" style="text-align:left">${d.port}</td><td data-l="Device" class="nw"><span class="chip" style="background:var(--${d.v})"></span>${esc(d.id)}</td><td data-l="Type">${esc(d.type)}</td><td data-l="VLAN" class="n">${p.oct(d.v)}</td><td data-l="IP" class="mono nw">${esc(d.ip)}</td><td data-l="PoE" class="n">${d.w} W</td></tr>`).join('')||'<tr><td colspan="6">No devices on this switch</td></tr>')).join('')+`</tbody></table></div>`;
  }else if(tab==='cisco'){
   const k=S.w.vend,V=VEND[k];
   h=`<div class="cp"><h2 style="margin:0">${V.n} config, ${p.sws.length} switch${p.sws.length>1?'es':''}</h2>${copyBtn('cfg')}</div><div class="seg" role="radiogroup" aria-label="Switch platform">${Object.entries(VEND).map(([kk,vv])=>`<button role="radio" aria-checked="${kk===k}" data-vend="${kk}">${vv.n}</button>`).join('')}</div><pre id="cfg">${esc(p.sws.map(x=>GEN[k](p,x)).join('\n\n'))}</pre><p class="note">${V.note} Change the admin password before you paste it. PoE is switched off on ports with no PoE device.</p>`;
@@ -386,12 +428,18 @@ function form(){
 }
 function vendFields(){const k=S.w.vend;if(!S.vn[k])S.vn[k]=clone(SAMPLE.vn[k]);$('w-vend').value=k;$('w-ifp').value=S.vn[k].ifp;$('w-up').value=S.vn[k].up;$('w-up').placeholder='auto: '+VEND[k].up({ports:Math.round(num(S.w.ports,24))})}
 function devForm(){
- const opts=t=>Object.entries(TYPES).map(([k,T])=>`<option value="${k}"${k===t?' selected':''}>${T.n}</option>`).join('');
- $('devs').innerHTML=S.d.map((r,i)=>`<div class="dev"><select id="d-t-${i}" aria-label="Type" data-i="${i}" data-k="t">${opts(r.t)}</select><input id="d-q-${i}" aria-label="Quantity" type="number" min="0" data-i="${i}" data-k="q" value="${r.q}"><input id="d-w-${i}" aria-label="Watts" type="number" step="0.5" min="0" data-i="${i}" data-k="w" value="${r.w}"><input id="d-m-${i}" aria-label="Mbps" type="number" step="0.5" min="0" data-i="${i}" data-k="m" value="${r.m}"><button class="x" data-del="${i}" aria-label="Remove row">×</button></div>`).join('')||'<p class="note">No devices yet. Add one to start.</p>';
+ const opts=t=>GRP.map(([g,gn])=>`<optgroup label="${gn}">${Object.entries(TYPES).filter(([k,T])=>T.v===g).map(([k,T])=>`<option value="${k}"${k===t?' selected':''}>${T.n}</option>`).join('')}</optgroup>`).join('');
+ $('devs').innerHTML=S.d.map((r,i)=>`<div class="dev"><div><label for="d-t-${i}">Device type</label><select id="d-t-${i}" data-i="${i}" data-k="t">${opts(r.t)}</select></div><button class="x" data-del="${i}" aria-label="Remove ${esc(TYPES[r.t]?TYPES[r.t].n:'row')}">×</button>
+ <div class="f"><div><label for="d-q-${i}">Quantity</label><div class="q"><button data-step="-1" data-i="${i}" aria-label="One fewer">−</button><input id="d-q-${i}" type="number" inputmode="numeric" min="0" data-i="${i}" data-k="q" value="${r.q}"><button data-step="1" data-i="${i}" aria-label="One more">+</button></div></div>
+ <div><label for="d-w-${i}">Watts each</label><input id="d-w-${i}" type="number" inputmode="decimal" step="0.5" min="0" data-i="${i}" data-k="w" value="${r.w}"></div>
+ <div><label for="d-m-${i}">Mbps each</label><input id="d-m-${i}" type="number" inputmode="decimal" step="0.5" min="0" data-i="${i}" data-k="m" value="${r.m}"></div></div></div>`).join('')||'<p class="note">No devices yet. Add one to start.</p>';
 }
 $('devs').addEventListener('input',e=>{const el=e.target,i=el.dataset.i,k=el.dataset.k;if(i===undefined)return;const r=S.d[i];
  if(k==='t'){r.t=el.value;r.w=TYPES[el.value].w;r.m=TYPES[el.value].m;devForm()}else r[k]=el.value;update()});
-$('devs').addEventListener('click',e=>{const i=e.target.dataset.del;if(i===undefined)return;S.d.splice(+i,1);devForm();update()});
+$('devs').addEventListener('click',e=>{const t=e.target;if(t.dataset.step){const r=S.d[t.dataset.i];r.q=Math.max(0,Math.round(num(r.q,0))+ +t.dataset.step);$('d-q-'+t.dataset.i).value=r.q;update();return}const i=t.dataset.del;if(i===undefined)return;S.d.splice(+i,1);devForm();update()});
+$('racks').addEventListener('click',e=>{const t=e.target.closest('.pt');if(!t)return;const sw=+t.dataset.sw,port=+t.dataset.port,d=R.sws[sw-1].ports[port-1];SEL=SEL&&SEL.sw===sw&&SEL.port===port?null:{sw,port,id:d&&port<=R.usable?d.id:null};figs(R)});
+$('racks').addEventListener('change',e=>{const id=e.target.dataset.move;if(!id)return;const n=+e.target.value;if(n)S.pin[id]=n;else delete S.pin[id];SEL={id};update()});
+$('hint').addEventListener('click',e=>{if(e.target.id!=='unpin')return;S.pin={};update()});
 $('add').onclick=()=>{S.d.push({t:'fixed',q:1,w:TYPES.fixed.w,m:TYPES.fixed.m});devForm();update()};
 $('tabs').addEventListener('click',e=>{const t=e.target.dataset.tab;if(!t)return;tab=t;out(R)});
 $('out').addEventListener('click',e=>{const vk=e.target.dataset.vend;if(vk){S.w.vend=vk;vendFields();update();return}const id=e.target.dataset.copy;if(!id)return;const b=e.target,txt=$(id).textContent;

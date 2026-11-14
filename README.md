@@ -28,6 +28,8 @@ This tool answers all five from one device list.
 
 Devices are packed onto switches until either the ports or your PoE limit runs out (80% of the budget by default), then the planner starts another switch. Every port is coloured by VLAN, and each switch shows its PoE draw against the limit and its estimated uplink traffic.
 
+Tap any port to see its device, VLAN, IP and power draw, and move the device to another switch if you'd rather split things differently. Spare ports and spare PoE are shown on each switch, so you can tell the customer how much room there is to grow.
+
 The planner warns you when a device needs more power than a port can supply, when a VLAN runs out of addresses, and when an uplink is over 70% full.
 
 ### 2. VLAN and IP plan
@@ -38,7 +40,7 @@ One /24 per role, using `10.<site>.<vlan>.0/24` so the VLAN ID matches the third
 
 ### 3. Port and address schedule
 
-Every device gets a name, switch, port, VLAN and IP. This is your install sheet and your as-built record.
+Every device gets a name, switch, port, VLAN and IP, grouped by switch. This is your install sheet and your as-built record.
 
 ![Port map listing each device with its switch port and IP](docs/port-map.png)
 
@@ -91,7 +93,7 @@ Plan a job from the truck or the customer's parking lot.
 
 1. Open the [live page](https://evilinhunter.github.io/camera-network-planner/), or download `index.html` and open it in any browser.
 2. Fill in the job: site name, site number, and the customer's user subnet and DNS/NTP server.
-3. Add your devices and quantities. Replace the default watts and Mbps with the figures from each spec sheet.
+3. Add your devices and quantities. Picking a type fills in typical watts and Mbps; replace them with the figures from each spec sheet.
 4. Set your switch: platform, port count, PoE budget and maximum watts per port.
 5. Read the warnings, then copy what you need from the tabs.
 
@@ -115,7 +117,7 @@ To host your own copy, fork the repo and turn on GitHub Pages: **Settings → Pa
 
 - More platforms: UniFi API, Netgear AV line, Ruckus ICX, Aruba AOS-S
 - Presets for common switch models (ports and PoE budget filled in for you)
-- Presets for common camera models
+- Presets for specific camera models, with watts and bitrates checked against spec sheets
 - Import a device list from CSV or a VMS export
 - Bigger sites: larger subnets and more than one camera VLAN
 - PDF export of the handoff
