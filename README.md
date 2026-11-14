@@ -1,10 +1,16 @@
 # Camera Network Planner
 
-**List the cameras, doors and servers on a job. Get the whole network design back in seconds.**
+**List the cameras, doors and recorders on a job. Get the handoff the customer's IT team asks for, before install day.**
 
-A free, open-source planner for security, access control and AV integrators. It turns a device list into a VLAN and IP plan, a PoE-aware switch layout, a port map, paste-ready switch configs for four platforms, firewall requests, and a handoff document for the customer's IT team.
+A free, open-source planner for security, access control and AV integrators. It turns a device list into an IT handoff document with the IP scheme, firewall requests and port map, checks the PoE budget, and writes the switch setup for four platforms.
 
-![Two switch faceplates with ports coloured by VLAN and a PoE meter under each](docs/faceplates.png)
+It works for the three ways camera jobs get wired:
+
+- **On the customer's network**, in VLANs that IT provides
+- **On your own separate security network**
+- **Straight into a PoE recorder (NVR)**, with no switch at all
+
+![Two switch faceplates with ports coloured by device type and a PoE meter under each](docs/faceplates.png)
 
 **[Try it in your browser](https://evilinhunter.github.io/camera-network-planner/)** · no install, no account, nothing leaves your machine
 
@@ -14,39 +20,55 @@ A free, open-source planner for security, access control and AV integrators. It 
 
 Camera and access control installers now build real networks, usually without a network engineer on the team. The questions are the same on every job:
 
-- How many switches do I need before the PoE budget runs out?
-- Which VLANs and subnets do I ask the customer's IT team for?
+- What do I send IT so they say yes the first time?
+- Which networks and addresses do I ask them for?
+- How many switches or recorders do I need before the PoE budget runs out?
 - What goes on which port, with which IP?
-- What do I paste into the switch?
-- What do I send IT so the firewall gets opened correctly the first time?
+- What gets set on the switch?
 
 This tool answers all five from one device list.
 
 ## What you get
 
-### 1. A switch layout that respects the PoE budget
+### 1. An IT handoff you can send before install day
 
-Devices are packed onto switches until either the ports or your PoE limit runs out (80% of the budget by default), then the planner starts another switch. Every port is coloured by VLAN, and each switch shows its PoE draw against the limit and its estimated uplink traffic.
+It opens with what you need from IT, then lists the networks, switches or recorders, firewall requests, remote access rules and the full device schedule. It's written in Markdown, so it pastes into an email, a ticket or a doc.
 
-Tap any port to see its device, VLAN, IP and power draw, and move the device to another switch if you'd rather split things differently. Spare ports and spare PoE are shown on each switch, so you can tell the customer how much room there is to grow.
+![IT handoff document](docs/handoff.png)
 
-The planner warns you when a device needs more power than a port can supply, when a VLAN runs out of addresses, and when an uplink is over 70% full.
+### 2. A PoE check you can see
 
-### 2. VLAN and IP plan
+Devices are packed onto switches, or recorder PoE ports, until the ports or your PoE limit run out (80% of the budget by default). Every port is coloured by what's plugged into it, and each unit shows its PoE draw against the limit.
 
-One /24 per role, using `10.<site>.<vlan>.0/24` so the VLAN ID matches the third octet and the scheme stays readable across sites.
+Tap any port to see its device, address and power draw, and move the device somewhere else if you'd rather split things differently. Spare ports and spare PoE are shown, so you can tell the customer how much room there is to grow.
 
-![IP plan table with four VLANs](docs/ip-plan.png)
+The planner warns you when a device needs more power than a port can supply, when a network runs out of addresses, and when an uplink is over 70% full.
 
-### 3. Port and address schedule
+Plugging cameras straight into a recorder? Pick that option and the planner checks the recorder's ports and PoE budget, and tells IT exactly how many addresses you need.
 
-Every device gets a name, switch, port, VLAN and IP, grouped by switch. This is your install sheet and your as-built record.
+![Recorder PoE ports view](docs/nvr.png)
 
-![Port map listing each device with its switch port and IP](docs/port-map.png)
+### 3. IP scheme
 
-### 4. Paste-ready switch configs for four platforms
+One /24 per network, using `10.<site>.<vlan>.0/24` so the VLAN ID matches the third octet and the scheme stays readable across sites. On a separate security network it's a single subnet.
 
-Pick a platform and the same design is written in its own syntax.
+![IP scheme table](docs/ip-plan.png)
+
+### 4. Port and address schedule
+
+Every device gets a name, port and IP, grouped by switch or recorder. This is your install sheet and your as-built record.
+
+![Port map listing each device with its port and IP](docs/port-map.png)
+
+### 5. Firewall requests
+
+A plain allow and block list: cameras reach the recorder, users reach the viewing software, cameras never reach the internet or the business network, and nothing is port-forwarded from the internet.
+
+![Firewall request table](docs/firewall.png)
+
+### 6. Switch setup for four platforms
+
+Pick a platform and the same design is written in its own syntax. If IT runs the switches, send it to them as a starting point.
 
 | Cisco IOS-XE | Aruba AOS-CX |
 |---|---|
@@ -61,27 +83,15 @@ Pick a platform and the same design is written in its own syntax.
 | Arista EOS | 720XP PoE access switches |
 | MikroTik RouterOS 7 | CRS3xx and CRS5xx, bridge VLAN filtering |
 
-Using UniFi or another switch you set up through a web page? The **Settings sheet** tab lists the networks to create and the profile for each port range.
+Using UniFi or another switch you set up in a web page? The **Settings sheet** tab lists the networks to create and the profile for each port range.
 
-Hardening included in every config:
+Built into every config:
 
 - Edge ports with PortFast or admin-edge, plus BPDU guard
 - PoE switched off on ports with no PoE device
 - Unused ports shut down and parked in an unused VLAN
-- Uplink trunk carries only the security VLANs
-- Management on its own VLAN, SSH only
-
-### 5. Firewall requests for customer IT
-
-A plain allow and deny list: cameras reach the recorder, users reach the VMS, and cameras never reach the internet or the business network.
-
-![Firewall request table with allow and deny rules](docs/firewall.png)
-
-### 6. An IT handoff you can paste into an email
-
-VLANs, switches, firewall requests and the full device schedule in Markdown. Paste it into an email, a ticket or a doc.
-
-![IT handoff document in Markdown](docs/handoff.png)
+- The uplink carries only the security VLANs
+- Switch management on SSH only
 
 ### Works on a phone
 
@@ -92,9 +102,9 @@ Plan a job from the truck or the customer's parking lot.
 ## Quick start
 
 1. Open the [live page](https://evilinhunter.github.io/camera-network-planner/), or download `index.html` and open it in any browser.
-2. Fill in the job: site name, site number, and the customer's user subnet and DNS/NTP server.
+2. Pick how the cameras connect, then fill in the site name, site number, and the customer's user subnet and DNS/NTP server.
 3. Add your devices and quantities. Picking a type fills in typical watts and Mbps; replace them with the figures from each spec sheet.
-4. Set your switch: platform, port count, PoE budget and maximum watts per port.
+4. Set your switch or recorder: port count, PoE budget and maximum watts per port.
 5. Read the warnings, then copy what you need from the tabs.
 
 The browser remembers your job. **Save or load a job** copies a job out as text so you can keep it with the project files or send it to a colleague.
