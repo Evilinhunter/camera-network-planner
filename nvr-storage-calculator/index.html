@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NVR Storage Calculator</title>
+<meta name="description" content="Free NVR storage and bandwidth calculator for security camera installers. Estimate Mbps, GB per day, total TB for your retention period, hard drives and NVR channel count.">
+<link rel="canonical" href="https://evilinhunter.github.io/camera-network-planner/nvr-storage-calculator/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Installer Network Tools">
+<meta property="og:title" content="NVR Storage Calculator">
+<meta property="og:description" content="Free NVR storage and bandwidth calculator for security camera installers. Estimate Mbps, GB per day, total TB for your retention period, hard drives and NVR channel count.">
+<meta property="og:url" content="https://evilinhunter.github.io/camera-network-planner/nvr-storage-calculator/">
+<meta property="og:image" content="https://evilinhunter.github.io/camera-network-planner/docs/faceplates.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+/* NVR storage calculator. Same look as the camera planner: rack green band with the live result,
+   inputs left, results right; phones stack band, inputs, results. */
+:root{--warn:light-dark(#b3261e,#ff8a80);--ok:light-dark(#0d6b4f,#7fdcb4);--acs:#ff6f59;--mgmt:#e6f5c8}
+.top{background:var(--rack);color:var(--onrack)}
+h1{font:700 clamp(32px,4.4vw,46px)/1.05 "Inter Tight",Inter,sans-serif;letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+h2{font:700 22px/1.2 "Inter Tight",Inter,sans-serif;margin:0 0 12px;letter-spacing:-.01em}
+h3{font:600 16px/1.3 Inter,sans-serif;margin:18px 0 8px}
+.sub{margin:0;color:#bcd9ce;max-width:62ch}
+.head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;align-items:end}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(9em,1fr));gap:1px;background:#ffffff22;border:1px solid #ffffff22;border-radius:10px;overflow:hidden}
+.fg{background:var(--rack2);padding:10px 12px}
+.fg b{display:block;font:700 clamp(22px,2.6vw,28px)/1.1 "Inter Tight",sans-serif;white-space:nowrap}
+.fg span{font-size:13px;color:#bcd9ce}
+.meter{position:relative;height:10px;background:#ffffff1a;border-radius:5px;margin-top:18px;overflow:hidden}
+.meter i{position:absolute;inset:0 auto 0 0;background:var(--mgmt);border-radius:5px}
+.meter i.hot{background:var(--acs)}
+.mt{display:flex;justify-content:space-between;gap:4px 12px;font-size:13px;color:#bcd9ce;margin-top:4px;flex-wrap:wrap}
+.warns{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:6px}
+.warns:empty{display:none}
+.warns li{background:#ff6f5922;border-left:3px solid var(--acs);padding:6px 10px;border-radius:4px;font-size:14px;color:#ffe2dc}
+.warns li.ok{background:#e6f5c81c;border-color:var(--mgmt);color:#e6f5c8}
+.main{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:28px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.panel+.panel{margin-top:14px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;align-items:end}
+.full{grid-column:1/-1}
+label{display:block;font-size:13px;color:var(--mute);font-weight:500}
+input,select{font:16px Inter,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 9px;width:100%;margin-top:3px;min-height:44px}
+input:focus,select:focus,button:focus-visible,summary:focus-visible{outline:2px solid #0d7680;outline-offset:1px}
+.grp{padding:12px 0 14px;border-bottom:1px solid var(--line)}
+.grp:first-child{padding-top:0}
+.gh{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px;align-items:end;margin-bottom:10px}
+.gh .x{min-height:44px;border:0;background:none;color:var(--mute);font-size:22px;cursor:pointer;border-radius:6px}
+.gh .x:hover{background:var(--line);color:var(--ink)}
+.est{font-size:14px;color:var(--mute);margin:10px 0 0}
+.est b{color:var(--ink);font-weight:600;white-space:nowrap}
+.q{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;margin-top:3px}
+.q input{margin:0;border-radius:0;text-align:center;border-inline:0;padding-inline:2px;-moz-appearance:textfield}
+.q input::-webkit-inner-spin-button{-webkit-appearance:none}
+.q button{min-height:44px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:20px;cursor:pointer}
+.q button:first-child{border-radius:6px 0 0 6px}.q button:last-child{border-radius:0 6px 6px 0}
+.q button:hover{background:var(--line)}
+button.b{font:600 15px Inter,sans-serif;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+button.b:hover{border-color:var(--mute)}
+button.p{background:var(--rack);color:#fff;border-color:var(--rack)}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.samp{background:light-dark(#e6f5c8,#1d3326);border-radius:6px;padding:8px 10px;font-size:14px;margin:0 0 12px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th{text-align:left;font-weight:600;font-size:13px;color:var(--mute);border-bottom:1px solid var(--line);padding:8px}
+td{border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.tot td{font-weight:600;border-bottom:0}
+td small{display:block;color:var(--mute);font-size:13px;font-weight:400}
+.nw{white-space:nowrap}
+.note{font-size:14px;color:var(--mute);margin:10px 0 0}
+.warn{color:var(--warn);font-weight:600}
+.okc{color:var(--ok);font-weight:600}
+.cp{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.cp h2{margin:0}
+.out>section+section{margin-top:32px}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(12em,1fr));gap:12px}
+.kv div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kv b{display:block;font:700 22px/1.2 "Inter Tight",Inter,sans-serif;white-space:nowrap}
+.kv span{font-size:14px;color:var(--mute)}
+.kv p{margin:6px 0 0;font-size:14px;color:var(--mute)}
+details summary{cursor:pointer;font-weight:600;min-height:32px}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin:8px 0 0;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.how{max-width:72ch}
+.how p,.how li{font-size:15px}
+.how code{font:14px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px;overflow-wrap:anywhere}
+@media(max-width:900px){.main,.head{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){table{font-size:14px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:2px 0;text-align:right}.stack td::before{content:attr(data-l);color:var(--mute);text-align:left;font-weight:400;white-space:nowrap}.stack td.e{display:none}.stack td.h{display:block;text-align:left;font-weight:600}.stack td.h::before{content:none}.stack td small{display:inline;margin-left:6px}}
+@media(prefers-reduced-motion:no-preference){.meter i{transition:width .35s ease}}
+</style>
+</head>
+<body data-root="../" data-page="storage">
+<header id="site-header"></header>
+<section class="band top">
+ <div class="wrap">
+  <div class="head">
+   <div>
+    <h1>NVR storage calculator</h1>
+    <p class="sub">Enter the cameras on a job and how long the customer wants to keep video. Get the bitrate, storage for the retention period, hard drives and recorder size. Every figure here is an estimate.</p>
+   </div>
+   <div class="figs" id="figs" aria-live="polite"></div>
+  </div>
+  <div class="meter" aria-hidden="true"><i id="bar"></i></div>
+  <div class="mt"><span id="bar-l"></span><span id="bar-r"></span></div>
+  <ul class="warns" id="warns"></ul>
+ </div>
+</section>
+
+<section class="band">
+ <div class="wrap main">
+  <div>
+   <div class="panel">
+    <h2>Camera groups</h2>
+    <p class="samp" id="samp">Loaded with a sample job. Change or remove these groups to match yours.</p>
+    <div id="groups"></div>
+    <div class="row"><button class="b" id="add">Add group</button><button class="b" id="reset">Reset to sample</button></div>
+    <p class="note">Leave the Mbps box empty to use the estimate. If you know the camera's real bitrate from its web page or the recorder's status screen, type it in.</p>
+   </div>
+   <div class="panel">
+    <h2>Recorder and storage</h2>
+    <div class="grid2">
+     <div><label for="o-days">Retention (days)</label><input id="o-days" type="number" inputmode="numeric" min="1" max="3650"></div>
+     <div><label for="o-oh">Headroom (%)</label><input id="o-oh" type="number" inputmode="numeric" min="0" max="100"></div>
+     <div><label for="o-lim">NVR incoming limit (Mbps)</label><input id="o-lim" type="number" inputmode="numeric" min="1"></div>
+     <div><label for="o-raid">Drive protection</label><select id="o-raid"><option value="none">None</option><option value="r1">RAID 1, mirrored pairs</option><option value="r5">RAID 5</option><option value="r6">RAID 6</option></select></div>
+    </div>
+    <p class="note">Headroom covers file system space, bitrate swings at night and drives that should not run full. 10 to 20% is typical. The incoming limit is on the recorder's spec sheet, often listed as incoming or input bandwidth.</p>
+   </div>
+  </div>
+
+  <div class="out">
+   <section id="res"></section>
+   <section id="gear"></section>
+   <section>
+    <div class="cp"><h2>Summary to send</h2><button class="b p" id="copy">Copy summary</button></div>
+    <details id="sumd"><summary>Show summary text</summary><pre id="sum"></pre></details>
+    <p class="note">Plain text in Markdown, so it pastes cleanly into a quote, email or ticket.</p>
+   </section>
+   <section class="how">
+    <h2>How this is worked out</h2>
+    <ol>
+     <li>Bitrate per camera starts from the table below: a typical average for the resolution and codec at 15 fps with a medium scene.</li>
+     <li>That is scaled by frame rate in straight proportion (20 fps is 20 ÷ 15 times the 15 fps figure). Real cameras do not scale exactly this way; dropping the frame rate usually saves a little less than this suggests.</li>
+     <li>Then by scene activity: low × 0.6, medium × 1.0, high × 1.6.</li>
+     <li>If you typed a bitrate for a group, that replaces the estimate.</li>
+     <li>Storage per day: <code>Mbps × 3600 × 24 ÷ 8 ÷ 1000 = GB per day</code>, which is the same as Mbps × 10.8. Motion-only groups multiply this by the share of the day they record.</li>
+     <li>Total: <code>GB per day × retention days ÷ 1000 = TB</code>, then plus the headroom percentage.</li>
+     <li>Drives: the fewest drives from 2 to 24 TB that hold the total, then the smallest size that does it with that many. RAID 1 keeps half the raw space, RAID 5 loses one drive, RAID 6 loses two.</li>
+     <li>NVR incoming bandwidth is every camera's full bitrate added up. Motion-only recording saves disk space, but the cameras still stream to the recorder all day.</li>
+    </ol>
+    <h3>Starting bitrates, Mbps per camera at 15 fps, medium scene</h3>
+    <div class="scroll"><table class="stack" id="ref"></table></div>
+    <p class="note">These are rounded middle-of-the-road figures from published bitrate guides and manufacturer recommendations, which vary by a factor of two or more for the same camera class. Real bitrates depend on the scene, lighting, night IR noise (often the busiest time for the encoder), lens and camera settings such as quality, keyframe interval and bitrate cap. Smart codec savings vary the most and shrink in busy scenes. Use the camera's own bitrate when you know it, and check the recorder after a few days of real recording.</p>
+    <h3>Not included</h3>
+    <ul>
+     <li>Sub-streams recorded alongside the main stream, audio, and remote viewing load on the recorder.</li>
+     <li>Drive sizes are as sold (1 TB = 1000 GB). The recorder may show about 9% less, which the headroom should cover.</li>
+    </ul>
+   </section>
+  </div>
+ </div>
+</section>
+<footer id="site-footer">The groups loaded at start are a sample. Every bitrate and storage figure on this page is an estimate. Check against the cameras' own bitrate before you order drives.</footer>
+
+<script src="../assets/config.js"></script>
+<script src="../assets/products.js"></script>
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num=(v,d,lo,hi)=>{let n=parseFloat(v);if(!isFinite(n))return d;if(lo!==undefined)n=Math.max(lo,n);if(hi!==undefined)n=Math.min(hi,n);return n};
+const KEY='nvrcalc.v1';
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+// Typical average Mbps per camera at 15 fps, medium scene. Estimates only.
+const RES={'2':'2MP (1080p)','4':'4MP (1440p)','5':'5MP','8':'8MP (4K)','12':'12MP'};
+const COD={h264:'H.264',h265:'H.265',smart:'H.265 with smart codec'};
+const BR={'2':{h264:3.0,h265:1.7,smart:1.0},'4':{h264:5.0,h265:2.8,smart:1.7},'5':{h264:6.0,h265:3.4,smart:2.0},'8':{h264:8.0,h265:4.6,smart:2.8},'12':{h264:11.0,h265:6.4,smart:3.8}};
+const FPS=[5,10,15,20,25,30];
+const ACT={low:['Low',0.6],med:['Medium',1.0],high:['High',1.6]};
+const RAID={none:'None',r1:'RAID 1',r5:'RAID 5',r6:'RAID 6'};
+const SIZES=[2,3,4,6,8,10,12,14,16,18,20,22,24];
+const CH=[4,8,16,32,64];
+const BAYS=[1,2,4,8,16];
+
+const SAMPLE={sample:true,days:30,oh:15,lim:160,raid:'none',g:[
+ {name:'Fixed cameras',n:12,res:'4',cod:'h265',fps:15,act:'med',rec:'cont',pct:30,ovr:''},
+ {name:'Parking lot 4K',n:4,res:'8',cod:'h265',fps:15,act:'high',rec:'cont',pct:30,ovr:''},
+ {name:'PTZ',n:2,res:'4',cod:'h265',fps:20,act:'high',rec:'cont',pct:30,ovr:''}]};
+const NEWG={name:'',n:4,res:'4',cod:'h265',fps:15,act:'med',rec:'cont',pct:30,ovr:''};
+
+function fix(x){
+ const s={sample:!!x.sample,days:num(x.days,30,1,3650),oh:num(x.oh,15,0,100),lim:num(x.lim,160,1),raid:RAID[x.raid]?x.raid:'none',g:[]};
+ (Array.isArray(x.g)?x.g:[]).slice(0,50).forEach(g=>{if(!g||typeof g!=='object')return;s.g.push({name:String(g.name||'').slice(0,60),n:Math.round(num(g.n,1,0,999)),res:RES[g.res]?g.res:'4',cod:COD[g.cod]?g.cod:'h265',fps:FPS.includes(+g.fps)?+g.fps:15,act:ACT[g.act]?g.act:'med',rec:g.rec==='motion'?'motion':'cont',pct:num(g.pct,30,1,100),ovr:g.ovr===''||g.ovr==null?'':String(num(g.ovr,'',0,500))})});
+ return s;
+}
+let S=clone(SAMPLE);
+try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&Array.isArray(x.g))S=fix(x)}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+
+const estEach=g=>BR[g.res][g.cod]*(g.fps/15)*ACT[g.act][1];
+const f1=n=>(Math.round(n*10)/10).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+const f0=n=>Math.round(n).toLocaleString('en-US');
+const fTB=n=>n<100?f1(n):f0(n);
+
+function pickDrives(need,raid){
+ if(need<=0)return{n:0,size:0,usable:0};
+ let best=null;
+ for(const size of SIZES){
+  const k=Math.ceil(need/size-1e-9);
+  let n,usable;
+  if(raid==='r1'){n=2*k;usable=k*size}
+  else if(raid==='r5'){n=Math.max(3,k+1);usable=(n-1)*size}
+  else if(raid==='r6'){n=Math.max(4,k+2);usable=(n-2)*size}
+  else{n=k;usable=k*size}
+  if(!best||n<best.n)best={n,size,usable};
+ }
+ return best;
+}
+
+function calc(){
+ const rows=S.g.map((g,i)=>{
+  const est=estEach(g),ov=g.ovr===''?NaN:parseFloat(g.ovr),useOv=isFinite(ov)&&ov>0,each=useOv?ov:est;
+  const share=g.rec==='motion'?g.pct/100:1,mbps=each*g.n,gb=mbps*10.8*share;
+  return{i,g,est,each,useOv,share,mbps,gb,tb:gb*S.days/1000};
+ });
+ const cams=rows.reduce((a,r)=>a+r.g.n,0),mbps=rows.reduce((a,r)=>a+r.mbps,0),gb=rows.reduce((a,r)=>a+r.gb,0);
+ const raw=gb*S.days/1000,need=raw*(1+S.oh/100),dr=pickDrives(need,S.raid);
+ const nvrs=Math.max(1,Math.ceil(cams/64)),per=Math.ceil(cams/nvrs);
+ const ch=cams?(CH.find(c=>c>=per)||64):0;
+ const bays=dr.n?(BAYS.find(b=>b>=dr.n)||dr.n):0;
+ return{rows,cams,mbps,gb,raw,need,dr,ch,nvrs,bays};
+}
+
+function groupForm(){
+ const opt=(o,v)=>Object.entries(o).map(([k,t])=>`<option value="${k}"${k===String(v)?' selected':''}>${esc(Array.isArray(t)?t[0]:t)}</option>`).join('');
+ $('groups').innerHTML=S.g.map((g,i)=>`<div class="grp">
+ <div class="gh"><div><label for="g-name-${i}">Group name</label><input id="g-name-${i}" data-i="${i}" data-k="name" value="${esc(g.name)}" placeholder="Group ${i+1}" maxlength="60"></div><button class="x" data-del="${i}" aria-label="Remove ${esc(g.name||'group '+(i+1))}">×</button></div>
+ <div class="grid2">
+  <div><label for="g-n-${i}">Cameras</label><div class="q"><button data-step="-1" data-i="${i}" aria-label="One fewer">−</button><input id="g-n-${i}" type="number" inputmode="numeric" min="0" data-i="${i}" data-k="n" value="${g.n}"><button data-step="1" data-i="${i}" aria-label="One more">+</button></div></div>
+  <div><label for="g-res-${i}">Resolution</label><select id="g-res-${i}" data-i="${i}" data-k="res">${opt(RES,g.res)}</select></div>
+  <div><label for="g-cod-${i}">Codec</label><select id="g-cod-${i}" data-i="${i}" data-k="cod">${opt(COD,g.cod)}</select></div>
+  <div><label for="g-fps-${i}">Frame rate</label><select id="g-fps-${i}" data-i="${i}" data-k="fps">${FPS.map(f=>`<option value="${f}"${f===g.fps?' selected':''}>${f} fps</option>`).join('')}</select></div>
+  <div><label for="g-act-${i}">Scene activity</label><select id="g-act-${i}" data-i="${i}" data-k="act">${opt(ACT,g.act)}</select></div>
+  <div><label for="g-rec-${i}">Recording</label><select id="g-rec-${i}" data-i="${i}" data-k="rec"><option value="cont"${g.rec==='cont'?' selected':''}>Continuous</option><option value="motion"${g.rec==='motion'?' selected':''}>Motion only</option></select></div>
+  <div id="g-pw-${i}"${g.rec==='motion'?'':' hidden'}><label for="g-pct-${i}">Time recording (%)</label><input id="g-pct-${i}" type="number" inputmode="numeric" min="1" max="100" data-i="${i}" data-k="pct" value="${g.pct}"></div>
+  <div><label for="g-ovr-${i}">Known Mbps each</label><input id="g-ovr-${i}" type="number" inputmode="decimal" step="0.1" min="0" data-i="${i}" data-k="ovr" value="${esc(g.ovr)}"></div>
+ </div>
+ <p class="est" id="g-est-${i}"></p>
+</div>`).join('')||'<p class="note">No camera groups. Add one to start.</p>';
+}
+
+function figs(R){
+ const over=R.mbps>S.lim,pc=S.lim?Math.min(100,R.mbps/S.lim*100):0;
+ $('figs').innerHTML=[
+  [fTB(R.need)+' TB','storage for '+S.days+' days'],
+  [f1(R.mbps)+' Mbps','into the NVR'],
+  [R.dr.n?R.dr.n+' × '+R.dr.size+' TB':'none','hard drives'],
+  [R.ch?(R.nvrs>1?R.nvrs+' × ':'')+R.ch+' ch':'none','NVR channels']
+ ].map(([b,s])=>`<div class="fg"><b>${b}</b><span>${s}</span></div>`).join('');
+ $('bar').style.width=pc+'%';$('bar').className=over?'hot':'';
+ $('bar-l').textContent=`Incoming ${f1(R.mbps)} of ${f0(S.lim)} Mbps NVR limit`;
+ $('bar-r').textContent=`${f0(R.mbps/S.lim*100)}% used`;
+ const w=[];
+ if(over)w.push(['',`Incoming video is ${f1(R.mbps)} Mbps, over the ${f0(S.lim)} Mbps limit you set. Pick a recorder rated higher, split the cameras across two recorders, or lower bitrate or frame rate.`]);
+ else if(R.mbps>S.lim*0.8)w.push(['',`Incoming video is ${f0(R.mbps/S.lim*100)}% of the ${f0(S.lim)} Mbps limit. Night IR and busy scenes can push it over; leave some margin.`]);
+ if(R.nvrs>1)w.push(['',`${R.cams} cameras is more than one 64-channel recorder. Plan on ${R.nvrs} recorders or a server-based system.`]);
+ if(R.dr.n>16)w.push(['',`${R.dr.n} drives is more than most recorders hold. Shorten retention, lower bitrates, or plan a storage server.`]);
+ if(R.rows.some(r=>r.g.n>0&&r.g.cod==='smart'&&r.g.act==='high'))w.push(['','Smart codecs save less in busy scenes. Treat the high-activity smart codec figures as optimistic.']);
+ if(!w.length&&R.cams)w.push(['ok',`Incoming video fits the ${f0(S.lim)} Mbps limit with room to spare.`]);
+ $('warns').innerHTML=w.map(([c,t])=>`<li${c?` class="${c}"`:''}>${esc(t)}</li>`).join('');
+}
+
+function results(R){
+ const pr=S.raid==='none'?'':` in ${RAID[S.raid]} (${R.dr.usable} TB usable of ${R.dr.n*R.dr.size} TB raw)`;
+ let h=`<h2>Results</h2><div class="scroll"><table class="stack"><thead><tr><th>Group</th><th class="n">Cameras</th><th class="n">Mbps each</th><th class="n">Total Mbps</th><th class="n">GB per day</th><th class="n">TB for ${S.days} days</th></tr></thead><tbody>`+
+ R.rows.map(r=>`<tr><td class="h">${esc(r.g.name||'Group '+(r.i+1))}<small>${esc(RES[r.g.res])}, ${esc(COD[r.g.cod])}, ${r.g.fps} fps${r.g.rec==='motion'?`, motion ${f0(r.g.pct)}%`:''}</small></td><td data-l="Cameras" class="n">${r.g.n}</td><td data-l="Mbps each" class="n">${f1(r.each)}${r.useOv?' (known)':''}</td><td data-l="Total Mbps" class="n">${f1(r.mbps)}</td><td data-l="GB per day" class="n">${f0(r.gb)}</td><td data-l="TB for ${S.days} days" class="n">${f1(r.tb)}</td></tr>`).join('')+
+ `<tr class="tot"><td class="h">Total</td><td data-l="Cameras" class="n">${R.cams}</td><td data-l="Mbps each" class="n e"></td><td data-l="Total Mbps" class="n">${f1(R.mbps)}</td><td data-l="GB per day" class="n">${f0(R.gb)}</td><td data-l="TB for ${S.days} days" class="n">${f1(R.raw)}</td></tr></tbody></table></div>`;
+ h+=`<h3>What to buy</h3><div class="kv">
+ <div><span>Storage needed</span><b>${fTB(R.need)} TB</b><p>${f1(R.raw)} TB of video plus ${f0(S.oh)}% headroom.</p></div>
+ <div><span>Hard drives</span><b>${R.dr.n?R.dr.n+' × '+R.dr.size+' TB':'none'}</b><p>${R.dr.n?`Surveillance-rated drives${pr||`, ${R.dr.usable} TB in total`}. Fewest drives that fit.`:'Add cameras to size drives.'}</p></div>
+ <div><span>NVR</span><b>${R.ch?(R.nvrs>1?R.nvrs+' × ':'')+R.ch+' channels':'none'}</b><p>${R.cams} cameras${R.bays?`, at least ${R.bays} drive bay${R.bays>1?'s':''}`:''}, rated for at least ${f0(Math.ceil(R.mbps))} Mbps incoming${R.nvrs>1?' in total':''}.</p></div>
+ </div>`;
+ if(S.raid==='none'&&R.dr.n>1)h+=`<p class="note">Without RAID, a failed drive loses the video on that drive. Pick RAID 1, 5 or 6 above if the customer needs protection; it adds drives.</p>`;
+ $('res').innerHTML=h;
+ R.rows.forEach(r=>{const el=$('g-est-'+r.i);if(!el)return;
+  el.innerHTML=(r.useOv?`Using your <b>${f1(r.each)} Mbps</b> each. Estimate would be ${f1(r.est)} Mbps.`:`Estimate <b>${f1(r.est)} Mbps</b> each, <b>${f1(r.mbps)} Mbps</b> for the group.`)+(r.g.rec==='motion'?` Records about ${f1(24*r.share)} h a day.`:'');
+  const ov=$('g-ovr-'+r.i);if(ov)ov.placeholder='Estimate '+f1(r.est)});
+}
+
+let R=null;
+function gearVals(R){return{channels:R.cams,channelsRounded:R.ch,bays:R.bays,mbps:Math.ceil(R.mbps),drives:R.dr.n,driveTB:R.dr.size,tb:fTB(R.need)}}
+function gear(){
+ if(!R)return;
+ const el=$('gear');
+ if(typeof window.SITE_GEAR!=='function'){el.innerHTML='<h2>Gear</h2><p class="note">The gear list did not load. Open this page from its website to see gear links.</p>';return}
+ const items=window.SITE_GEAR('storage',gearVals(R)),link=window.SITE_LINK,stores=window.SITE_STORES||[];
+ el.innerHTML='<h2>Gear</h2>'+(items.length?`<div class="scroll"><table class="stack"><thead><tr><th>Item</th><th class="n">Qty</th><th>What to look for</th><th>Shop</th></tr></thead><tbody>`+
+  items.map(g=>`<tr><td data-l="Item" class="h">${esc(g.name)}</td><td data-l="Qty" class="n">${esc(g.qty)}</td><td data-l="What to look for">${esc(g.spec)}</td><td data-l="Shop" class="nw"><span>${link?stores.map(st=>link(st,g.query)).join(' · '):''}</span></td></tr>`).join('')+
+  `</tbody></table></div>`:'<p class="note">Add cameras to see gear.</p>')+
+  `<p class="note">Links are store searches, not endorsements. Some may be affiliate links: <a href="../disclosure/">affiliate disclosure</a>.</p>`;
+}
+
+function summary(R){
+ const L=[];
+ L.push('# NVR storage estimate','');
+ L.push(`Retention: ${S.days} days. Headroom: ${f0(S.oh)}%. Drive protection: ${RAID[S.raid]}.`,'');
+ L.push('| Group | Cameras | Setup | Mbps each | Total Mbps | GB/day |','|---|---:|---|---:|---:|---:|');
+ R.rows.forEach(r=>L.push(`| ${(r.g.name||'Group '+(r.i+1)).replace(/\|/g,'/')} | ${r.g.n} | ${RES[r.g.res]}, ${COD[r.g.cod]}, ${r.g.fps} fps, ${ACT[r.g.act][0].toLowerCase()} activity, ${r.g.rec==='motion'?'motion '+f0(r.g.pct)+'%':'continuous'} | ${f1(r.each)}${r.useOv?' (known)':''} | ${f1(r.mbps)} | ${f0(r.gb)} |`));
+ L.push('');
+ L.push(`- Cameras: ${R.cams}`);
+ L.push(`- Incoming to the NVR: ${f1(R.mbps)} Mbps (limit set: ${f0(S.lim)} Mbps${R.mbps>S.lim?', OVER':''})`);
+ L.push(`- Storage per day: ${f0(R.gb)} GB`);
+ L.push(`- Storage for ${S.days} days: ${f1(R.raw)} TB, ${fTB(R.need)} TB with ${f0(S.oh)}% headroom`);
+ L.push(`- Hard drives: ${R.dr.n?`${R.dr.n} x ${R.dr.size} TB, ${R.dr.usable} TB usable`:'none'}`);
+ L.push(`- NVR: ${R.ch?(R.nvrs>1?R.nvrs+' x ':'')+R.ch+' channels':'none'}${R.bays?`, at least ${R.bays} drive bays`:''}, at least ${f0(Math.ceil(R.mbps))} Mbps incoming`);
+ L.push('','Bitrates are estimates unless marked known. Real bitrates depend on scene, lighting, night IR noise and camera settings; check the recorder after a few days of recording.');
+ return L.join('\n');
+}
+
+function update(){
+ R=calc();figs(R);results(R);gear();
+ $('sum').textContent=summary(R);
+ $('samp').hidden=!S.sample;
+ save();
+}
+function edited(){if(S.sample){S.sample=false}}
+
+function form(){
+ [['o-days','days'],['o-oh','oh'],['o-lim','lim'],['o-raid','raid']].forEach(([id,k])=>{const el=$(id);el.value=S[k];
+  el.oninput=()=>{edited();if(k==='raid')S.raid=el.value;else{const v=num(el.value,NaN);if(!isFinite(v))return;S[k]=k==='days'?num(v,30,1,3650):k==='oh'?num(v,15,0,100):num(v,160,1)}update()}});
+}
+$('groups').addEventListener('input',e=>{const el=e.target,i=el.dataset.i,k=el.dataset.k;if(i===undefined||!k)return;const g=S.g[i];if(!g)return;edited();
+ if(k==='name')g.name=el.value.slice(0,60);
+ else if(k==='n'){const v=num(el.value,NaN);if(!isFinite(v))return;g.n=Math.round(num(v,0,0,999))}
+ else if(k==='fps')g.fps=+el.value;
+ else if(k==='pct'){const v=num(el.value,NaN);if(!isFinite(v))return;g.pct=num(v,30,1,100)}
+ else if(k==='ovr')g.ovr=el.value===''?'':String(num(el.value,'',0,500));
+ else g[k]=el.value;
+ if(k==='rec')$('g-pw-'+i).hidden=g.rec!=='motion';
+ update()});
+$('groups').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+ if(t.dataset.step){const g=S.g[t.dataset.i];edited();g.n=Math.max(0,Math.min(999,g.n+ +t.dataset.step));$('g-n-'+t.dataset.i).value=g.n;update();return}
+ if(t.dataset.del!==undefined){edited();S.g.splice(+t.dataset.del,1);groupForm();update()}});
+$('add').onclick=()=>{edited();S.g.push(clone(NEWG));groupForm();update();const el=$('g-name-'+(S.g.length-1));if(el)el.focus()};
+$('reset').onclick=()=>{S=clone(SAMPLE);form();groupForm();update()};
+$('copy').onclick=()=>{const b=$('copy'),txt=summary(R);$('sum').textContent=txt;
+ const done=m=>{b.textContent=m;setTimeout(()=>b.textContent='Copy summary',1800)};
+ const sel=()=>{$('sumd').open=true;try{const r=document.createRange();r.selectNodeContents($('sum'));const s=getSelection();s.removeAllRanges();s.addRange(r)}catch(e){}done('Selected, press copy')};
+ try{navigator.clipboard.writeText(txt).then(()=>done('Copied'),sel)}catch(err){sel()}};
+
+$('ref').innerHTML=`<thead><tr><th>Resolution</th>${Object.values(COD).map(c=>`<th class="n">${esc(c)}</th>`).join('')}</tr></thead><tbody>`+
+ Object.entries(RES).map(([k,n])=>`<tr><td class="h">${esc(n)}</td>${Object.entries(COD).map(([c,cn])=>`<td data-l="${esc(cn)}" class="n">${f1(BR[k][c])}</td>`).join('')}</tr>`).join('')+'</tbody>';
+
+form();groupForm();update();
+window.addEventListener('load',gear);
+}
+</script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

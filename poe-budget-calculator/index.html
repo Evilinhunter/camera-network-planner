@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PoE Budget Calculator</title>
+<meta name="description" content="Free PoE budget calculator for camera and access control installers. Check a switch's total PoE budget and each port's 802.3af, 802.3at or 802.3bt limit against the devices on a job.">
+<link rel="canonical" href="https://evilinhunter.github.io/camera-network-planner/poe-budget-calculator/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Installer Network Tools">
+<meta property="og:title" content="PoE Budget Calculator">
+<meta property="og:description" content="Free PoE budget calculator for camera and access control installers. Check a switch's total PoE budget and each port's 802.3af, 802.3at or 802.3bt limit against the devices on a job.">
+<meta property="og:url" content="https://evilinhunter.github.io/camera-network-planner/poe-budget-calculator/">
+<meta property="og:image" content="https://evilinhunter.github.io/camera-network-planner/docs/faceplates.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+/* PoE budget calculator. Same language as the camera planner: rack green band with the
+   live result and switch faceplates on top, inputs left and checks right below. */
+:root{--cam:#f5c518;--big:#c3a6ff;--acs:#ff6f59;--net:#8fd3ff;--oth:#b9c6c1;--mgmt:#e6f5c8;--park:#0f2a24;--warn:light-dark(#b3261e,#ff8a80);--ok:light-dark(#0d6b4f,#7fdcb4);--amber:light-dark(#8a5a00,#f5c518)}
+.top{background:var(--rack);color:var(--onrack)}
+h1{font:700 clamp(32px,4.4vw,46px)/1.05 "Inter Tight",Inter,sans-serif;letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+h2{font:700 22px/1.2 "Inter Tight",Inter,sans-serif;margin:0 0 12px;letter-spacing:-.01em}
+h3{font:600 16px/1.3 Inter,sans-serif;margin:18px 0 8px}
+.sub{margin:0;color:#bcd9ce;max-width:62ch}
+.head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;align-items:end;margin-bottom:22px}
+.figs{display:flex;flex-wrap:wrap;gap:1px;background:var(--rack2);box-shadow:inset 0 0 0 1px #ffffff22;border:1px solid #ffffff22;border-radius:10px;overflow:hidden}
+.fg{flex:1 1 7.5em;background:var(--rack2);padding:10px 12px;box-shadow:0 0 0 1px #ffffff22}
+.fg b{display:block;font:700 clamp(22px,2.6vw,28px)/1.1 "Inter Tight",sans-serif;white-space:nowrap}
+.fg span{font-size:13px;color:#bcd9ce}
+.fg.v-fits b{color:var(--mgmt)}.fg.v-tight b{color:#f5c518}.fg.v-over b{color:#ff8a80}
+.racks{display:grid;gap:14px}
+.sw{background:#1b1f1e;border-radius:10px;padding:12px 14px;box-shadow:inset 0 1px 0 #ffffff22,0 2px 0 #00000055}
+.swh{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;font-size:14px;color:#d7e4df;margin-bottom:8px}
+.swh b{color:#fff;font-weight:600}
+.fp{overflow-x:auto;padding:4px 4px 6px}
+.ports{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);gap:5px;min-width:max-content;justify-content:start}
+.pt{width:30px;height:22px;padding:0;cursor:pointer;border-radius:3px;background:var(--park);border:1px solid #00000066;box-shadow:inset 0 -3px 0 #00000040}
+.pt:hover{filter:brightness(1.15)}
+.pt.sel{outline:2px solid #fff;outline-offset:2px}
+.pt:focus-visible{outline:2px solid #8fd3ff;outline-offset:2px}
+.pt.cam{background:var(--cam)}.pt.big{background:var(--big)}.pt.acs{background:var(--acs)}.pt.net{background:var(--net)}.pt.oth{background:var(--oth)}
+.pt.inj{box-shadow:inset 0 0 0 3px #ff3b30}
+.pd{margin-top:10px;background:#ffffff14;border-radius:8px;padding:8px 12px;font-size:14px;color:#eaf6f0}
+.pd b{color:#fff}
+.meter{position:relative;height:10px;background:#ffffff1a;border-radius:5px;margin-top:10px;overflow:hidden}
+.meter i{position:absolute;inset:0 auto 0 0;background:var(--mgmt);border-radius:5px}
+.meter i.hot{background:var(--acs)}
+.meter u{position:absolute;top:0;bottom:0;width:2px;background:#fff}
+.mt{display:flex;justify-content:space-between;gap:4px 12px;font-size:13px;color:#bcd9ce;margin-top:4px;flex-wrap:wrap}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:#d7e4df;margin-top:14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:12px;border-radius:3px;display:inline-block;flex:none}
+.hint{font-size:14px;color:#bcd9ce;margin:10px 0 0}
+.warns{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:6px}
+.warns li{background:#ff6f5922;border-left:3px solid var(--acs);padding:6px 10px;border-radius:4px;font-size:14px;color:#ffe2dc}
+.warns li.tight{background:#f5c5181f;border-color:#f5c518;color:#fbeebb}
+.warns li.ok{background:#e6f5c81c;border-color:var(--mgmt);color:#e6f5c8}
+.main{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:28px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.panel+.panel{margin-top:14px}
+.out>section+section{margin-top:30px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.full{grid-column:1/-1}
+label{display:block;font-size:13px;color:var(--mute);font-weight:500}
+input,select{font:16px Inter,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 9px;width:100%;margin-top:3px;min-height:44px}
+input:focus,select:focus,button:focus-visible{outline:2px solid #0d7680;outline-offset:1px}
+.dev{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px;align-items:end;padding:12px 0;border-bottom:1px solid var(--line)}
+.dev .f{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1.15fr);gap:8px}
+.q{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;margin-top:3px}
+.q input{margin:0;border-radius:0;text-align:center;border-inline:0;padding-inline:2px;-moz-appearance:textfield}
+.q input::-webkit-inner-spin-button{-webkit-appearance:none}
+.q button{min-height:44px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:20px;cursor:pointer;padding:0}
+.q button:first-child{border-radius:6px 0 0 6px}.q button:last-child{border-radius:0 6px 6px 0}
+.q button:hover{background:var(--line)}
+.dev .x{min-height:44px;border:0;background:none;color:var(--mute);font-size:20px;cursor:pointer;border-radius:6px}
+.dev .x:hover{background:var(--line);color:var(--ink)}
+button.b{font:600 15px Inter,sans-serif;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+button.b:hover{border-color:var(--mute)}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.seg button{font:600 14px Inter,sans-serif;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--mute);cursor:pointer}
+.seg button[aria-checked=true]{background:var(--rack);border-color:var(--rack);color:#fff}
+.samp{background:light-dark(#fff7d6,#2a2410);border:1px solid light-dark(#ecd98a,#5a4d1c);color:var(--ink);border-radius:8px;padding:8px 12px;font-size:14px;margin:0 0 4px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th{text-align:left;font-weight:600;font-size:13px;color:var(--mute);border-bottom:1px solid var(--line);padding:8px}
+td{border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tfoot td{font-weight:600}
+.nw{white-space:nowrap}
+.chip{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:0}
+.res{font-weight:600}.res.ok{color:var(--ok)}.res.check{color:var(--amber)}.res.over,.res.beyond{color:var(--warn)}.res.none{color:var(--mute)}
+.why{display:block;font-size:13px;color:var(--mute);font-weight:400}
+.note{font-size:14px;color:var(--mute);margin:10px 0 0}
+p.lead{margin:0 0 10px}
+.cp{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin:0;overflow-x:auto;font:13.5px/1.5 "JetBrains Mono",ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+details summary{cursor:pointer;font-weight:600;min-height:32px}
+details.more{margin-top:12px}
+ul.plain{margin:0;padding-left:20px}ul.plain li+li{margin-top:4px}
+@media(max-width:900px){.pt{width:22px;height:20px}.ports{gap:4px}.main{grid-template-columns:minmax(0,1fr)}.head{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:480px){.dev .f{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}.dev .f>div:last-child{grid-column:1/-1}}
+@media(max-width:600px){table{font-size:14px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:2px 0;text-align:right}.stack td::before{content:attr(data-l);color:var(--mute);text-align:left;font-weight:400;flex:none}.stack td.nl::before{content:none}.stack td.nl{display:block;text-align:left;font-weight:600}.stack td.hid,.dsk{display:none}.stack .why{text-align:right}}
+@media(prefers-reduced-motion:no-preference){.meter i{transition:width .35s ease}}
+</style>
+</head>
+<body data-root="../" data-page="poe">
+<header id="site-header"></header>
+<section class="band top">
+ <div class="wrap">
+  <div class="head">
+   <div>
+    <h1>PoE budget calculator</h1>
+    <p class="sub">Check that a PoE switch can power every camera, door and access point on a job: the total against the switch's budget, and each device against what its port can supply.</p>
+   </div>
+   <div class="figs" id="figs"></div>
+  </div>
+  <div class="racks" id="racks"></div>
+  <div class="legend">
+   <span><i style="background:var(--cam)"></i>Cameras</span>
+   <span><i style="background:var(--big)"></i>PTZ and multi-sensor</span>
+   <span><i style="background:var(--acs)"></i>Access control</span>
+   <span><i style="background:var(--net)"></i>Access points and phones</span>
+   <span><i style="background:var(--oth)"></i>Other</span>
+   <span><i style="background:#1b1f1e;box-shadow:inset 0 0 0 3px #ff3b30"></i>Powered by an injector or local power</span>
+   <span><i style="background:var(--park);border:1px solid #ffffff44"></i>Unused</span>
+  </div>
+  <p class="hint">Tap a port to see what is on it.</p>
+  <ul class="warns" id="warns"></ul>
+ </div>
+</section>
+
+<section class="band">
+ <div class="wrap main">
+  <div>
+   <div class="panel">
+    <h2>Switch</h2>
+    <div class="grid2">
+     <div class="full"><label for="w-pre">Typical switch (examples, not specific products)</label><select id="w-pre"></select></div>
+     <div><label for="w-ports">PoE ports</label><input id="w-ports" type="number" inputmode="numeric" min="1" max="96"></div>
+     <div><label for="w-budget">Total PoE budget (W)</label><input id="w-budget" type="number" inputmode="decimal" min="1"></div>
+     <div class="full"><label for="w-std">Standard on every PoE port</label><select id="w-std"></select></div>
+     <div><label for="w-head">Use up to (% of budget)</label><input id="w-head" type="number" inputmode="numeric" min="10" max="100"></div>
+    </div>
+    <h3 id="mode-l">Count the budget by</h3>
+    <div class="seg" role="radiogroup" aria-labelledby="mode-l" id="mode">
+     <button type="button" role="radio" data-mode="actual">Actual draw</button>
+     <button type="button" role="radio" data-mode="class">Class (what the switch reserves)</button>
+    </div>
+    <p class="note" id="mode-note"></p>
+   </div>
+   <div class="panel">
+    <h2>Devices</h2>
+    <p class="samp" id="samp">These devices are a sample job. Change them to match yours, or clear them.</p>
+    <div id="devs"></div>
+    <div class="row"><button class="b" id="add" type="button">Add device</button><button class="b" id="clear" type="button">Clear devices</button><button class="b" id="reset" type="button">Reset to sample</button></div>
+    <p class="note">Picking a type fills in typical watts. Replace them with the maximum power on each model's spec sheet, and add its PoE class if the sheet lists one.</p>
+   </div>
+  </div>
+
+  <div class="out">
+   <section>
+    <h2>Device check</h2>
+    <p class="lead" id="chk-lead"></p>
+    <div class="scroll"><table class="stack" id="chk"></table></div>
+   </section>
+   <section>
+    <h2>Switches needed</h2>
+    <div id="need"></div>
+   </section>
+   <section>
+    <h2>Reserved by class or actual draw</h2>
+    <p class="lead">A device tells the switch its PoE class when it plugs in. Some switches then reserve the full class amount from the budget, for example 30 W for a class 4 camera that only uses 13 W. Others count what each port actually draws. Check your switch's manual or PoE status page to see which it does, and pick the matching option under Switch.</p>
+    <p class="note">Reserving by class is the safe way to plan, because a switch that works this way refuses power to a port once its reservations reach the budget, even when the real draw is low. Many switches can lower a port's reservation through LLDP power negotiation with the device, or let you set a per-port limit.</p>
+   </section>
+   <section>
+    <h2>Power by standard</h2>
+    <div class="scroll"><table class="stack">
+     <thead><tr><th>Standard</th><th>Classes</th><th class="n">Switch port gives</th><th class="n">Device can use</th></tr></thead>
+     <tbody id="stds"></tbody>
+    </table></div>
+    <details class="more"><summary>Power by class</summary>
+     <div class="scroll"><table class="stack">
+      <thead><tr><th>Class</th><th>Standard</th><th class="n">Switch reserves</th><th class="n">Device can use</th></tr></thead>
+      <tbody id="clss"></tbody>
+     </table></div>
+     <p class="note">Class 0 is a device that does not announce a class; the switch treats it like class 3. 802.3bt figures for classes 5 to 8 are over all four pairs.</p>
+    </details>
+   </section>
+   <section>
+    <h2>Cable length and power loss</h2>
+    <ul class="plain">
+     <li>Keep each run within 100 m (328 ft) of cable, patch cords included. That is the Ethernet limit, with or without PoE.</li>
+     <li>The "device can use" figures already allow for the power lost in a worst-case 100 m run, so do not subtract cable loss again. That gap is why an 802.3af port gives 15.4 W but a device can count on only 12.95 W.</li>
+     <li>The switch measures power at its own port, which includes what the cable loses. The headroom left under your limit covers that, plus IR and heaters at night and PTZ movement.</li>
+     <li>Use solid copper Cat5e or better. Copper-clad aluminium cable runs hotter and loses more power, and is a poor fit for 802.3bt. For runs over 100 m, use a PoE extender or fibre.</li>
+    </ul>
+   </section>
+   <section>
+    <h2>Gear</h2>
+    <div id="gear"></div>
+   </section>
+   <section>
+    <div class="cp"><h2 style="margin:0">Summary</h2><button class="b" id="copy" type="button">Copy summary</button></div>
+    <pre id="sum"></pre>
+   </section>
+  </div>
+ </div>
+</section>
+<footer id="site-footer">Power figures follow IEEE 802.3af, 802.3at and 802.3bt. Device wattages are typical examples; use the figures on your spec sheets, and check the switch's own PoE status after install.</footer>
+
+<script src="../assets/config.js"></script>
+<script src="../assets/products.js"></script>
+<script>
+{
+// IEEE 802.3 PoE figures. pse: power the switch port must supply. pd: power the device can count on
+// at the end of a worst-case 100 m cable. cls: highest class the standard covers.
+const STD={
+ af:{n:'802.3af (PoE)',s:'802.3af',g:'802.3af',pse:15.4,pd:12.95,cls:3,cl:'0 to 3'},
+ at:{n:'802.3at (PoE+)',s:'PoE+',g:'PoE+',pse:30,pd:25.5,cls:4,cl:'0 to 4'},
+ bt3:{n:'802.3bt Type 3',s:'802.3bt Type 3',g:'802.3bt',pse:60,pd:51,cls:6,cl:'0 to 6'},
+ bt4:{n:'802.3bt Type 4',s:'802.3bt Type 4',g:'802.3bt Type 4',pse:90,pd:71.3,cls:8,cl:'0 to 8'}
+};
+const ORDER=['af','at','bt3','bt4'];
+// Per class: [switch reserves (PSE) W, device can use (PD) W]
+const CLS=[[15.4,12.95],[4,3.84],[7,6.49],[15.4,12.95],[30,25.5],[45,40],[60,51],[75,62],[90,71.3]];
+const TYPES={
+ fixed:{n:'Fixed camera',g:'cam',w:6},
+ ir:{n:'Camera with IR or heater',g:'cam',w:13},
+ ptz:{n:'PTZ camera',g:'big',w:25},
+ multi:{n:'Multi-sensor camera',g:'big',w:20},
+ door:{n:'Door controller',g:'acs',w:15},
+ reader:{n:'Card reader',g:'acs',w:5},
+ intercom:{n:'Video intercom',g:'acs',w:13},
+ ap:{n:'Wi-Fi access point',g:'net',w:20},
+ phone:{n:'IP phone',g:'net',w:5},
+ other:{n:'Other device',g:'oth',w:10}
+};
+const PRESETS={
+ '8af':{n:'8-port 802.3af, 65 W',ports:8,budget:65,std:'af'},
+ '8at':{n:'8-port PoE+, 120 W',ports:8,budget:120,std:'at'},
+ '16at':{n:'16-port PoE+, 240 W',ports:16,budget:240,std:'at'},
+ '24at':{n:'24-port PoE+, 370 W',ports:24,budget:370,std:'at'},
+ '48at':{n:'48-port PoE+, 740 W',ports:48,budget:740,std:'at'},
+ '24bt':{n:'24-port 802.3bt (60 W ports), 720 W',ports:24,budget:720,std:'bt3'}
+};
+const SAMPLE={sw:{pre:'24at',ports:24,budget:370,std:'at',head:80,mode:'actual'},sample:true,
+ d:[{t:'fixed',q:12,w:6,c:''},{t:'ir',q:4,w:13,c:''},{t:'multi',q:2,w:20,c:''},{t:'ptz',q:1,w:45,c:''},{t:'door',q:2,w:15,c:''},{t:'intercom',q:1,w:13,c:''},{t:'ap',q:1,w:20,c:'4'}]};
+const KEY='poecalc.v1';
+const clone=o=>JSON.parse(JSON.stringify(o));
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num=(v,d)=>{const n=parseFloat(v);return isFinite(n)?n:d};
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const f=x=>String(Math.round(x*100)/100);           // 12.95, 25.5, 30
+const fw=x=>`${f(x)}&nbsp;W`;
+const wr=x=>`${Math.round(x)}&nbsp;W`;
+
+let S=clone(SAMPLE),R=null,SEL=null;
+try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&x.sw&&Array.isArray(x.d)){S=x;S.sw=Object.assign(clone(SAMPLE.sw),x.sw)}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+
+const estCls=w=>{for(let c=1;c<=8;c++)if(w<=CLS[c][1])return c;return null};
+const stdFor=w=>ORDER.find(k=>STD[k].pd>=w);
+const stdForCls=c=>ORDER.find(k=>STD[k].cls>=c);
+
+function checkRow(r,std){
+ const T=TYPES[r.t]||TYPES.other,P=STD[std];
+ const w=Math.max(0,num(r.w,0)),q=clamp(Math.round(num(r.q,0)),0,500);
+ const given=r.c!==''&&r.c!=null&&isFinite(+r.c)?clamp(Math.round(+r.c),0,8):null;
+ const cls=given!=null?given:(w>0?estCls(w):null);
+ let st='ok',need=null,why='';
+ if(w===0){st='none';why='No PoE needed'}
+ else if(w>STD.bt4.pd){st='beyond';why=`More than the ${f(STD.bt4.pd)} W that any PoE standard delivers`}
+ else if(w>P.pd){st='over';need=stdFor(w);why=`This port gives up to ${f(P.pd)} W at the device. Use a higher-standard switch or an injector`}
+ else if(given!=null&&given>P.cls){st='check';need=stdForCls(given);why=`Class ${given} asks for ${STD[need].n}; it may not start, or may run with features off`}
+ else if(given!=null&&w>CLS[given][1]){st='check';why=`${f(w)} W is more than class ${given} allows (${f(CLS[given][1])} W). Check the spec sheet`}
+ const onSw=st!=='over'&&st!=='beyond'&&w>0;
+ const res=onSw?Math.min(P.pse,CLS[cls==null?0:cls][0]):0;
+ return{T,t:r.t,w,q,given,cls,st,need,why,onSw,res};
+}
+
+function calc(){
+ const sw=S.sw,std=STD[sw.std]?sw.std:'at',P=STD[std];
+ const ports=clamp(Math.round(num(sw.ports,24)),1,96),budget=Math.max(1,num(sw.budget,370)),head=clamp(num(sw.head,80),10,100);
+ const limit=budget*head/100,mode=sw.mode==='class'?'class':'actual';
+ const rows=S.d.map(r=>checkRow(r,std));
+ let draw=0,resv=0,count=0;
+ rows.forEach(x=>{count+=x.q;if(x.onSw){draw+=x.q*x.w;resv+=x.q*x.res}});
+ const used=mode==='class'?resv:draw;
+ // Pack devices onto as many of these switches as needed: by ports, and by power under the limit.
+ const units=[];rows.forEach((x,i)=>{for(let k=0;k<x.q&&units.length<3000;k++)units.push({i,k,x,p:x.onSw?(mode==='class'?x.res:x.w):0})});
+ const order=units.slice().sort((a,b)=>b.p-a.p||a.i-b.i||a.k-b.k),sws=[];
+ order.forEach(u=>{let s=sws.find(s=>s.u.length<ports&&(u.p===0||!s.p||s.p+u.p<=limit+1e-9));if(!s){s={u:[],p:0};sws.push(s)}s.u.push(u);s.p+=u.p});
+ if(!sws.length)sws.push({u:[],p:0});
+ sws.forEach((s,n)=>{s.n=n+1;s.u.sort((a,b)=>a.i-b.i||a.k-b.k);s.draw=s.u.reduce((a,u)=>a+(u.x.onSw?u.x.w:0),0);s.resv=s.u.reduce((a,u)=>a+u.x.res,0)});
+ let verdict;
+ if(!count)verdict='none';
+ else if(used>budget+1e-9||count>ports)verdict='over';
+ else if(used>limit+1e-9)verdict='tight';
+ else verdict='fits';
+ return{std,P,ports,budget,head,limit,mode,rows,draw,resv,used,count,sws,verdict};
+}
+
+const VTXT={fits:'Fits',tight:'Tight',over:'Over',none:'No devices'};
+function niceW(x){if(x<=0)return 0;return x<100?Math.ceil(x/5)*5:x<500?Math.ceil(x/10)*10:Math.ceil(x/50)*50}
+function gearVals(p){
+ const ports=p.count,inj=p.rows.filter(x=>x.st==='over'),injN=inj.reduce((a,x)=>a+x.q,0);
+ const top=inj.reduce((m,x)=>ORDER.indexOf(x.need)>ORDER.indexOf(m)?x.need:m,'af');
+ return{ports,portsRounded:[8,16,24,48].find(n=>n>=ports)||48,budget:niceW(p.used/(p.head/100)),standard:STD[p.std].g,
+  injectors:injN,injectorW:injN?STD[top].pse:0,injectorStandard:injN?(top==='at'?'PoE+':'802.3bt'):''};
+}
+
+function renderFigs(p){
+ const other=p.mode==='class'?p.draw:p.resv;
+ const nsw=p.sws.length;
+ $('figs').innerHTML=[
+  [VTXT[p.verdict],`at ${f(p.head)}% of ${f(p.budget)}&nbsp;W`,'v-'+p.verdict],
+  [wr(p.used),`${p.mode==='class'?'reserved by class':'actual draw'}, limit ${Math.round(p.limit)}&nbsp;W`],
+  [wr(other),p.mode==='class'?'actual draw':'reserved by class'],
+  [`${p.count} of ${p.ports}`,'ports used'],
+  [nsw,nsw===1?'switch needed':'switches needed']
+ ].map(x=>`<div class="fg ${x[2]||''}"><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');
+}
+
+function renderRacks(p){
+ const label=`${p.ports}-port ${STD[p.std].s}, ${f(p.budget)} W`;
+ const shown=p.sws.slice(0,12);
+ if(SEL&&(SEL.sw>p.sws.length||SEL.port>p.ports))SEL=null;
+ $('racks').innerHTML=shown.map(s=>{
+  const cells=[];for(let i=0;i<p.ports;i++){const u=s.u[i],sel=SEL&&SEL.sw===s.n&&SEL.port===i+1?' sel':'',at=`data-sw="${s.n}" data-port="${i+1}"`;
+   cells.push(u?`<button type="button" class="pt ${u.x.T.g}${u.x.onSw||u.x.st==='none'?'':' inj'}${sel}" ${at} aria-label="Port ${i+1}, ${esc(u.x.T.n)}, ${f(u.x.w)} watts"></button>`:`<button type="button" class="pt${sel}" ${at} aria-label="Port ${i+1}, unused"></button>`)}
+  const pct=Math.min(100,s.p/p.budget*100),lim=p.head,room=Math.round(p.limit-s.p),free=p.ports-s.u.length;
+  let pd='';
+  if(SEL&&SEL.sw===s.n){const u=s.u[SEL.port-1];
+   pd=`<div class="pd">${u?`<b>Port ${SEL.port}: ${esc(u.x.T.n)}</b>, ${fw(u.x.w)}, ${u.x.cls==null?'no class':`class ${u.x.cls}${u.x.given==null?' (estimated from watts)':''}`}. ${u.x.onSw?`Reserves ${fw(u.x.res)} by class.`:u.x.st==='none'?'Data only.':u.x.st==='over'?`Powered by a ${STD[u.x.need].g} injector; this port carries data only.`:'Needs local power; this port carries data only.'}`:`<b>Port ${SEL.port}</b> unused`}</div>`}
+  return`<div class="sw"><div class="swh"><span><b>Switch ${s.n}</b> &nbsp;${esc(label)}</span><span>${s.u.length} of ${p.ports} ports${free>0?`, ${free} free`:''}</span></div><div class="fp"><div class="ports">${cells.join('')}</div></div>${pd}
+  <div class="meter" role="img" aria-label="PoE ${Math.round(s.p)} of ${Math.round(p.budget)} watts"><i class="${s.p>p.limit+1e-9?'hot':''}" style="width:${pct}%"></i><u style="left:${lim}%"></u></div>
+  <div class="mt"><span>PoE ${wr(s.p)} of ${f(p.budget)}&nbsp;W ${p.mode==='class'?'reserved':'drawn'}</span><span>${room>=0?`${room}&nbsp;W to spare under the ${Math.round(p.limit)}&nbsp;W limit`:`${-room}&nbsp;W over the ${Math.round(p.limit)}&nbsp;W limit`}</span></div></div>`}).join('')+
+  (p.sws.length>shown.length?`<p class="hint">and ${p.sws.length-shown.length} more switches</p>`:'');
+}
+
+function renderWarns(p){
+ const W=[];
+ p.rows.forEach(x=>{if(!x.q)return;const n=`${x.q} × ${x.T.n} at ${f(x.w)} W`;
+  if(x.st==='over')W.push(['',`${n} ${x.q>1?'need':'needs'} ${STD[x.need].n}. These ${STD[p.std].s} ports give up to ${f(p.P.pd)} W at the device. Use a switch with ${STD[x.need].g} ports, or a ${f(STD[x.need].pse)} W ${STD[x.need].g} injector for ${x.q>1?'each':'it'}.`]);
+  else if(x.st==='beyond')W.push(['',`${n}: that is more than any PoE standard delivers (${f(STD.bt4.pd)} W at the device for 802.3bt Type 4). Use local power or the maker's own power supply.`]);
+  else if(x.st==='check')W.push(['tight',`${n}: ${x.why}.`])});
+ if(p.count>p.ports)W.push(['',`${p.count} devices but only ${p.ports} PoE ports. You need ${p.sws.length} of these switches, or one with more ports.`]);
+ if(p.verdict==='over'&&p.used>p.budget)W.push(['',`The total, ${Math.round(p.used)} W ${p.mode==='class'?'reserved':'drawn'}, is over the ${f(p.budget)} W budget. Some ports will not get power.`]);
+ if(p.verdict==='tight')W.push(['tight',`The total, ${Math.round(p.used)} W, is under the ${f(p.budget)} W budget but over your ${f(p.head)}% limit of ${Math.round(p.limit)} W. It will run, with little room for heaters, PTZ movement or another device.`]);
+ if(p.mode==='actual'&&p.resv>p.budget&&p.draw<=p.budget)W.push(['tight',`Reserved by class, these devices would take ${Math.round(p.resv)} W, more than the ${f(p.budget)} W budget. If this switch reserves by class, some ports will not power up.`]);
+ if(p.verdict==='fits'&&!W.length)W.push(['ok','Every device fits its port, and the total is within your limit.']);
+ else if(p.verdict==='fits')W.unshift(['ok',`The total, ${Math.round(p.used)} W, is within your ${Math.round(p.limit)} W limit.`]);
+ if(p.verdict==='none')W.push(['ok','Add devices to check them against the switch.']);
+ $('warns').innerHTML=W.map(([c,t])=>`<li${c?` class="${c}"`:''}>${esc(t)}</li>`).join('');
+}
+
+function renderCheck(p){
+ const RES={ok:'OK',check:'Check',beyond:'Needs local power',none:'No PoE'};
+ $('chk-lead').textContent=`Each device against a ${STD[p.std].n} port: up to ${f(p.P.pd)} W at the device, class ${p.P.cls} or lower.`;
+ const body=p.rows.map(x=>{if(!x.q)return'';
+  const r=x.st==='over'?'Needs '+STD[x.need].n:RES[x.st];
+  return`<tr><td data-l="Device" class="nl"><span class="chip" style="background:var(--${x.T.g})"></span>${esc(x.T.n)}</td><td data-l="Qty" class="n">${x.q}</td><td data-l="Watts each" class="n">${fw(x.w)}</td><td data-l="Class" class="n">${x.cls==null?'none':x.cls+(x.given==null?' (est.)':'')}</td><td data-l="Reserves each" class="n">${x.onSw?fw(x.res):'0&nbsp;W'}</td><td data-l="Result"><span><span class="res ${x.st}">${esc(r)}</span>${x.st!=='ok'&&x.st!=='none'?`<span class="why">${esc(x.why)}</span>`:''}</span></td></tr>`}).join('');
+ $('chk').innerHTML=body?`<thead><tr><th>Device</th><th class="n">Qty</th><th class="n">Watts each</th><th class="n">Class</th><th class="n">Reserves each</th><th>Result</th></tr></thead><tbody>${body}</tbody>
+  <tfoot><tr><td class="nl">On the switch</td><td data-l="Ports" class="n">${p.count}</td><td data-l="Actual draw" class="n">${wr(p.draw)}</td><td class="n hid"></td><td data-l="Reserved by class" class="n">${wr(p.resv)}</td><td data-l="Limit">${Math.round(p.limit)}&nbsp;W<span class="dsk"> limit</span></td></tr></tfoot>`:'<tbody><tr><td>No devices yet. Add one to start.</td></tr></tbody>';
+ const offN=p.rows.filter(x=>x.st==='over'||x.st==='beyond').reduce((a,x)=>a+x.q,0);
+ if(offN)$('chk-lead').textContent+=` Devices on an injector or local power still use a port for data, but are left out of the switch's PoE total.`;
+}
+
+function renderNeed(p){
+ const n=p.sws.length,by=p.mode==='class'?'reserved by class':'actual draw';
+ $('need').innerHTML=!p.count?'<p class="lead">No devices yet.</p>':n===1?`<p class="lead">One ${esc(p.ports+'-port, '+f(p.budget)+' W')} switch holds every device, using ${p.count} of ${p.ports} ports and ${Math.round(p.used)} W of its ${Math.round(p.limit)} W limit (${by}).</p>`:
+  `<p class="lead">This job needs <b>${n}</b> of these ${esc(p.ports+'-port, '+f(p.budget)+' W')} switches to stay within ${p.ports} ports and the ${Math.round(p.limit)} W limit each (${by}).</p><div class="scroll"><table class="stack"><thead><tr><th>Switch</th><th class="n">Ports used</th><th class="n">${p.mode==='class'?'Reserved':'Draw'}</th></tr></thead><tbody>${p.sws.map(s=>`<tr><td data-l="Switch">Switch ${s.n}</td><td data-l="Ports used" class="n">${s.u.length} of ${p.ports}</td><td data-l="${p.mode==='class'?'Reserved':'Draw'}" class="n">${wr(s.p)}</td></tr>`).join('')}</tbody></table></div><p class="note">Devices are packed largest first. Or pick a switch with more ports or a bigger budget under Switch.</p>`;
+}
+
+function renderGear(){
+ const el=$('gear');if(!el||!R)return;
+ if(typeof window.SITE_GEAR!=='function'){el.innerHTML='<p class="note">Gear suggestions appear once the page finishes loading.</p>';return}
+ const v=gearVals(R),items=window.SITE_GEAR('poe',v),stores=window.SITE_STORES||[],link=window.SITE_LINK;
+ if(!items.length){el.innerHTML='<p class="note">No gear suggestions for this job.</p>';return}
+ el.innerHTML=`<p class="lead">What to look for if you are buying for this job. The switch budget is the total ${R.mode==='class'?'reserved by class':'actual draw'} divided by your ${f(R.head)}% limit.</p><div class="scroll"><table class="stack"><thead><tr><th>Item</th><th class="n">Qty</th><th>What to look for</th><th>Shop</th></tr></thead><tbody>`+
+  items.map(g=>`<tr><td data-l="Item">${esc(g.name)}</td><td data-l="Qty" class="n">${esc(g.qty)}</td><td data-l="What to look for">${esc(g.spec)}</td><td data-l="Shop" class="nw">${link?stores.map(st=>link(st,g.query)).join(' · '):''}</td></tr>`).join('')+
+  `</tbody></table></div>${v.ports>48?`<p class="note">That is more ports than one typical switch has. Split the devices across two or more switches, each sized the same way.</p>`:''}<p class="note">Links are store searches, not endorsements. Some may be affiliate links. <a href="../disclosure/">Affiliate disclosure</a>.</p>`;
+}
+
+function summary(p){
+ const L=['PoE budget check',''];
+ L.push(`Switch: ${p.ports} PoE ports, ${f(p.budget)} W budget, ${STD[p.std].n} on every port`);
+ L.push(`Budget counted by: ${p.mode==='class'?'class (what the switch reserves)':'actual draw'}`);
+ L.push(`Limit: ${f(p.head)}% of budget = ${Math.round(p.limit)} W`,'','Devices:');
+ p.rows.forEach(x=>{if(!x.q)return;const r=x.st==='ok'?'OK':x.st==='none'?'no PoE':x.st==='over'?`needs ${STD[x.need].n} (injector)`:x.st==='beyond'?'needs local power':'check: '+x.why;
+  L.push(`- ${x.q} x ${x.T.n}, ${f(x.w)} W each, ${x.cls==null?'no class':'class '+x.cls+(x.given==null?' (est.)':'')}: ${r}`)});
+ L.push('',`On the switch: ${Math.round(p.draw)} W actual draw, ${Math.round(p.resv)} W reserved by class`);
+ L.push(`Ports used: ${p.count} of ${p.ports}`);
+ L.push(`Result: ${VTXT[p.verdict]}${p.verdict==='none'?'':` (${Math.round(p.used)} W of ${Math.round(p.limit)} W limit, ${f(p.budget)} W budget)`}`);
+ L.push(`Switches needed: ${p.count?p.sws.length:0}`);
+ const g=gearVals(p);if(g.injectors)L.push(`PoE injectors: ${g.injectors} x ${g.injectorStandard}, ${g.injectorW} W`);
+ L.push('','Wattages are from the device list; check them against spec sheets. Keep runs within 100 m.');
+ return L.join('\n');
+}
+
+function renderStatic(){
+ $('stds').innerHTML=ORDER.map(k=>`<tr><td data-l="Standard">${STD[k].n}</td><td data-l="Classes">${STD[k].cl}</td><td data-l="Switch port gives" class="n">${fw(STD[k].pse)}</td><td data-l="Device can use" class="n">${fw(STD[k].pd)}</td></tr>`).join('');
+ $('clss').innerHTML=CLS.map((c,i)=>`<tr><td data-l="Class">${i}</td><td data-l="Standard">${i<=3?'802.3af and up':i===4?'802.3at and up':i<=6?'802.3bt Type 3 and up':'802.3bt Type 4'}</td><td data-l="Switch reserves" class="n">${fw(c[0])}</td><td data-l="Device can use" class="n">${fw(c[1])}</td></tr>`).join('');
+}
+
+function swForm(){
+ const sw=S.sw;
+ $('w-pre').innerHTML=Object.entries(PRESETS).map(([k,v])=>`<option value="${k}">${esc(v.n)}</option>`).join('')+'<option value="custom">Custom, your own figures</option>';
+ $('w-std').innerHTML=ORDER.map(k=>`<option value="${k}">${STD[k].n}: ${f(STD[k].pse)} W per port</option>`).join('');
+ $('w-pre').value=PRESETS[sw.pre]?sw.pre:'custom';$('w-ports').value=sw.ports;$('w-budget').value=sw.budget;$('w-std').value=STD[sw.std]?sw.std:'at';$('w-head').value=sw.head;
+}
+function modeUI(){
+ document.querySelectorAll('#mode [data-mode]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===(S.sw.mode==='class'?'class':'actual'))));
+ $('mode-note').textContent=S.sw.mode==='class'?'Each device counts as the full amount its class reserves, capped at what the port can give. Use this if your switch reserves by class.':'Each device counts as its watts from the list. Use this if your switch counts measured draw, and keep the headroom.';
+}
+function devForm(){
+ const tOpts=t=>Object.entries(TYPES).map(([k,T])=>`<option value="${k}"${k===t?' selected':''}>${esc(T.n)} (typical ${T.w} W)</option>`).join('');
+ const cOpts=c=>`<option value=""${c===''||c==null?' selected':''}>Not listed</option>`+CLS.map((x,i)=>`<option value="${i}"${String(c)===String(i)?' selected':''}>Class ${i}</option>`).join('');
+ $('devs').innerHTML=S.d.map((r,i)=>`<div class="dev"><div><label for="d-t-${i}">Device type</label><select id="d-t-${i}" data-i="${i}" data-k="t">${tOpts(r.t)}</select></div><button type="button" class="x" data-del="${i}" aria-label="Remove ${esc((TYPES[r.t]||TYPES.other).n)}">×</button>
+ <div class="f"><div><label for="d-q-${i}">Quantity</label><div class="q"><button type="button" data-step="-1" data-i="${i}" aria-label="One fewer">−</button><input id="d-q-${i}" type="number" inputmode="numeric" min="0" data-i="${i}" data-k="q" value="${esc(r.q)}"><button type="button" data-step="1" data-i="${i}" aria-label="One more">+</button></div></div>
+ <div><label for="d-w-${i}">Watts each</label><input id="d-w-${i}" type="number" inputmode="decimal" step="0.5" min="0" data-i="${i}" data-k="w" value="${esc(r.w)}"></div>
+ <div><label for="d-c-${i}">PoE class</label><select id="d-c-${i}" data-i="${i}" data-k="c">${cOpts(r.c)}</select></div></div></div>`).join('')||'<p class="note">No devices yet. Add one to start.</p>';
+ $('samp').hidden=!S.sample;
+}
+
+function update(){
+ R=calc();renderFigs(R);renderRacks(R);renderWarns(R);renderCheck(R);renderNeed(R);renderGear();
+ $('sum').textContent=summary(R);$('samp').hidden=!S.sample;save();
+}
+const touched=()=>{if(S.sample){S.sample=false}};
+
+['w-ports','w-budget','w-std','w-head'].forEach(id=>{$(id).addEventListener('input',()=>{const k={'w-ports':'ports','w-budget':'budget','w-std':'std','w-head':'head'}[id];S.sw[k]=$(id).value;
+ if(id!=='w-head'){const P=PRESETS[S.sw.pre];if(!P||+S.sw.ports!==P.ports||+S.sw.budget!==P.budget||S.sw.std!==P.std){S.sw.pre='custom';$('w-pre').value='custom'}}update()})});
+$('w-pre').addEventListener('input',()=>{const k=$('w-pre').value,P=PRESETS[k];S.sw.pre=k;if(P){S.sw.ports=P.ports;S.sw.budget=P.budget;S.sw.std=P.std;swForm()}update()});
+$('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(!b)return;S.sw.mode=b.dataset.mode;modeUI();update()});
+$('devs').addEventListener('input',e=>{const el=e.target,i=el.dataset.i,k=el.dataset.k;if(i===undefined||!k)return;const r=S.d[i];if(!r)return;touched();
+ if(k==='t'){r.t=el.value;r.w=(TYPES[el.value]||TYPES.other).w;$('d-w-'+i).value=r.w}else r[k]=el.value;update()});
+$('devs').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+ if(t.dataset.step){const i=t.dataset.i,r=S.d[i];r.q=Math.max(0,Math.round(num(r.q,0))+ +t.dataset.step);$('d-q-'+i).value=r.q;touched();update();return}
+ if(t.dataset.del!==undefined){S.d.splice(+t.dataset.del,1);touched();devForm();update()}});
+$('add').onclick=()=>{S.d.push({t:'fixed',q:1,w:TYPES.fixed.w,c:''});touched();devForm();update();const el=$('d-t-'+(S.d.length-1));if(el&&el.focus)el.focus()};
+$('clear').onclick=()=>{S.d=[];S.sample=false;SEL=null;devForm();update()};
+$('reset').onclick=()=>{S=clone(SAMPLE);SEL=null;swForm();modeUI();devForm();update()};
+$('racks').addEventListener('click',e=>{const t=e.target.closest('.pt');if(!t)return;const sw=+t.dataset.sw,port=+t.dataset.port;SEL=SEL&&SEL.sw===sw&&SEL.port===port?null:{sw,port};renderRacks(R)});
+$('copy').addEventListener('click',()=>{const b=$('copy'),txt=$('sum').textContent;
+ const done=m=>{b.textContent=m;setTimeout(()=>{b.textContent='Copy summary'},1600)};
+ const pick=()=>{try{const r=document.createRange();r.selectNodeContents($('sum'));const s=getSelection();s.removeAllRanges();s.addRange(r)}catch(e){}done('Selected, press copy')};
+ try{navigator.clipboard.writeText(txt).then(()=>done('Copied'),pick)}catch(e){pick()}});
+
+renderStatic();swForm();modeUI();devForm();update();
+window.addEventListener('load',renderGear);
+}
+</script>
+<script src="../assets/site.js"></script>
+</body>
+</html>
