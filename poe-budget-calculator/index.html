@@ -158,6 +158,7 @@ ul.plain{margin:0;padding-left:20px}ul.plain li+li{margin-top:4px}
     <div id="devs"></div>
     <div class="row"><button class="b" id="add" type="button">Add device</button><button class="b" id="clear" type="button">Clear devices</button><button class="b" id="reset" type="button">Reset to sample</button></div>
     <p class="note">Picking a type fills in typical watts. Replace them with the maximum power on each model's spec sheet, and add its PoE class if the sheet lists one.</p>
+    <p class="note">Cisco 91xx access points use the maximum draw Cisco publishes, which includes the USB port and PoE out. Most models still run on a lower PoE level with some features turned off; Cisco's <a href="https://www.cisco.com/c/en/us/support/docs/wireless/catalyst-9100-access-points/215467-cisco-access-point-power-requirements-qu.html" target="_blank" rel="noopener">AP power requirements reference</a> lists what each one gives up.</p>
    </div>
   </div>
 
@@ -237,7 +238,29 @@ const TYPES={
  intercom:{n:'Video intercom',g:'acs',w:13},
  ap:{n:'Wi-Fi access point',g:'net',w:20},
  phone:{n:'IP phone',g:'net',w:5},
- other:{n:'Other device',g:'oth',w:10}
+ other:{n:'Other device',g:'oth',w:10},
+ // Cisco 91xx access points: maximum draw at the AP as Cisco publishes it, including
+ // USB and PoE-out. Source: Cisco "Understand Aironet and Catalyst AP Power Requirements"
+ // (doc 215467), with the 9105 from Cisco's 9105AX deployment guide. Class only where Cisco documents it.
+ c9105i:{n:'Cisco Catalyst 9105AXI',g:'net',w:11,cisco:1},
+ c9105w:{n:'Cisco Catalyst 9105AXW (PoE out on)',g:'net',w:25.5,cisco:1},
+ c9115:{n:'Cisco Catalyst 9115AX',g:'net',w:21.4,cisco:1},
+ c9117:{n:'Cisco Catalyst 9117AX',g:'net',w:28.9,cisco:1},
+ c9120:{n:'Cisco Catalyst 9120AX',g:'net',w:25.5,cisco:1},
+ c9124:{n:'Cisco Catalyst 9124AX outdoor (not published, sized for 802.3bt)',g:'net',w:51,cisco:1},
+ c9130:{n:'Cisco Catalyst 9130AX',g:'net',w:30.5,cisco:1},
+ c9136:{n:'Cisco Catalyst 9136I',g:'net',w:47.3,cisco:1},
+ c9162:{n:'Cisco Catalyst 9162I',g:'net',w:25.5,cisco:1},
+ c9164:{n:'Cisco Catalyst 9164I',g:'net',w:30,cisco:1},
+ c9166:{n:'Cisco Catalyst 9166I / 9166D1',g:'net',w:30.5,cisco:1},
+ c9171:{n:'Cisco Wireless 9171I',g:'net',w:30,cisco:1},
+ c9172i:{n:'Cisco Wireless 9172I',g:'net',w:32,c:5,cisco:1},
+ c9172h:{n:'Cisco Wireless 9172H (wall plate)',g:'net',w:41,c:5,cisco:1},
+ c9174:{n:'Cisco Wireless 9174I / 9174E',g:'net',w:37,c:5,cisco:1},
+ c9176:{n:'Cisco Wireless 9176I / 9176D1',g:'net',w:39,cisco:1},
+ c9177:{n:'Cisco Wireless 9177',g:'net',w:45.1,cisco:1},
+ c9178:{n:'Cisco Wireless 9178I',g:'net',w:47,c:6,cisco:1},
+ c9179:{n:'Cisco Wireless 9179F',g:'net',w:47,cisco:1}
 };
 const PRESETS={
  '8af':{n:'8-port 802.3af, 65 W',ports:8,budget:65,std:'af'},
@@ -419,7 +442,8 @@ function modeUI(){
  $('mode-note').textContent=S.sw.mode==='class'?'Each device counts as the full amount its class reserves, capped at what the port can give. Use this if your switch reserves by class.':'Each device counts as its watts from the list. Use this if your switch counts measured draw, and keep the headroom.';
 }
 function devForm(){
- const tOpts=t=>Object.entries(TYPES).map(([k,T])=>`<option value="${k}"${k===t?' selected':''}>${esc(T.n)} (typical ${T.w} W)</option>`).join('');
+ const opt=([k,T],t)=>`<option value="${k}"${k===t?' selected':''}>${esc(T.n)} (${T.cisco?'max':'typical'} ${T.w} W)</option>`,ents=Object.entries(TYPES);
+ const tOpts=t=>`<optgroup label="Typical devices">${ents.filter(e=>!e[1].cisco).map(e=>opt(e,t)).join('')}</optgroup><optgroup label="Cisco 91xx access points (Cisco's published max draw)">${ents.filter(e=>e[1].cisco).map(e=>opt(e,t)).join('')}</optgroup>`;
  const cOpts=c=>`<option value=""${c===''||c==null?' selected':''}>Not listed</option>`+CLS.map((x,i)=>`<option value="${i}"${String(c)===String(i)?' selected':''}>Class ${i}</option>`).join('');
  $('devs').innerHTML=S.d.map((r,i)=>`<div class="dev"><div><label for="d-t-${i}">Device type</label><select id="d-t-${i}" data-i="${i}" data-k="t">${tOpts(r.t)}</select></div><button type="button" class="x" data-del="${i}" aria-label="Remove ${esc((TYPES[r.t]||TYPES.other).n)}">×</button>
  <div class="f"><div><label for="d-q-${i}">Quantity</label><div class="q"><button type="button" data-step="-1" data-i="${i}" aria-label="One fewer">−</button><input id="d-q-${i}" type="number" inputmode="numeric" min="0" data-i="${i}" data-k="q" value="${esc(r.q)}"><button type="button" data-step="1" data-i="${i}" aria-label="One more">+</button></div></div>
@@ -439,7 +463,7 @@ const touched=()=>{if(S.sample){S.sample=false}};
 $('w-pre').addEventListener('input',()=>{const k=$('w-pre').value,P=PRESETS[k];S.sw.pre=k;if(P){S.sw.ports=P.ports;S.sw.budget=P.budget;S.sw.std=P.std;swForm()}update()});
 $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(!b)return;S.sw.mode=b.dataset.mode;modeUI();update()});
 $('devs').addEventListener('input',e=>{const el=e.target,i=el.dataset.i,k=el.dataset.k;if(i===undefined||!k)return;const r=S.d[i];if(!r)return;touched();
- if(k==='t'){r.t=el.value;r.w=(TYPES[el.value]||TYPES.other).w;$('d-w-'+i).value=r.w}else r[k]=el.value;update()});
+ if(k==='t'){r.t=el.value;const T=TYPES[el.value]||TYPES.other;r.w=T.w;r.c=T.c!=null?String(T.c):'';$('d-w-'+i).value=r.w;const ce=$('d-c-'+i);if(ce)ce.value=r.c}else r[k]=el.value;update()});
 $('devs').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
  if(t.dataset.step){const i=t.dataset.i,r=S.d[i];r.q=Math.max(0,Math.round(num(r.q,0))+ +t.dataset.step);$('d-q-'+i).value=r.q;touched();update();return}
  if(t.dataset.del!==undefined){S.d.splice(+t.dataset.del,1);touched();devForm();update()}});
