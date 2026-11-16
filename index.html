@@ -234,7 +234,7 @@ const SAMPLE={s:{mode:'it',name:'Oakridge Self Storage',code:'OAK',num:12,gw:'25
  d:[{t:'fixed',q:14,w:8,m:4},{t:'ir',q:6,w:13,m:4},{t:'ptz',q:2,w:30,m:6},{t:'door',q:4,w:15,m:.1},{t:'intercom',q:1,w:13,m:2},{t:'nvr',q:1,w:0,m:0},{t:'ws',q:1,w:0,m:0}]};
 const GRP=[['cam','Cameras'],['acs','Access control'],['sys','Servers']];
 // Where visitors send feature and change requests. Leave empty to hide the note.
-const CONTACT_EMAIL='';
+const CONTACT_EMAIL='maucerimatt@gmail.com';
 const CONTACT_SUBJECT='Camera Network Planner Request';
 const KEY='cnp.v1';
 const VEND={cisco:{n:'Cisco IOS-XE',up:p=>'TenGigabitEthernet1/1/1',note:'Built for Catalyst 9200 and 9300 style access switches.'},aruba:{n:'Aruba AOS-CX',up:p=>`1/1/${p.ports+1}`,note:'Built for Aruba CX 6000, 6100 and 6200 style access switches.'},arista:{n:'Arista EOS',up:p=>`Ethernet${p.ports+1}`,note:'Built for Arista 720XP style PoE access switches.'},mikrotik:{n:'MikroTik RouterOS 7',up:p=>'sfp-sfpplus1',note:'Built for CRS3xx and CRS5xx switches using bridge VLAN filtering with hardware offload. Reset the switch to an empty config first, because the factory config already holds every port in its own bridge. VLAN filtering and the unused-port shutdown come last, so paste it from a console or a port you will not lose.'}};
