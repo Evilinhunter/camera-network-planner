@@ -14,6 +14,8 @@ It works for the three ways camera jobs get wired:
 
 **[Try it in your browser](https://evilinhunter.github.io/camera-network-planner/)** · no install, no account, nothing leaves your machine
 
+The **Gear list** tab turns the plan into a shopping list: switches or recorders, drives, cable, patch cords and UPS, with quantities and the specs to look for. Copy it as CSV for a quote.
+
 ---
 
 ## Why
@@ -119,9 +121,42 @@ The browser remembers your job. **Save or load a job** copies a job out as text 
 
 ## How it works
 
-One HTML file. No build step, no server, no dependencies, no tracking. All planning runs in your browser, so job details never leave your machine.
+A static site with no build step, no server, no dependencies and no tracking. All planning runs in your browser, so job details never leave your machine.
 
 To host your own copy, fork the repo and turn on GitHub Pages: **Settings → Pages → Deploy from a branch → main / root**.
+
+## Project structure
+
+```
+index.html            the planner
+about/ privacy/ disclosure/   text pages
+assets/config.js      site settings: contact email, affiliate tags, future hooks
+assets/products.js    gear catalog used by the planner's Gear list tab
+assets/site.css       shared colours, type, header, footer
+assets/site.js        shared header, footer and affiliate links
+sitemap.xml robots.txt
+docs/                 README screenshots
+```
+
+Every page loads `config.js` and `site.js`, and has an empty `<header id="site-header">` and `<footer id="site-footer">` that `site.js` fills in. Each page sets `data-root` on `<body>` to the path back to the site root: `""` at the root, `"../"` one folder down.
+
+### Setting the contact email and affiliate tags
+
+Everything lives in `assets/config.js`:
+
+- `contactEmail`: shown in every footer and on the About and Privacy pages
+- `affiliate.amazonTag`: your Amazon Associates tracking ID. Once it's set, gear links carry it and the Amazon statement appears on the disclosure page.
+- `affiliate.bhImpactPrefix`: your B&H deep-link prefix from Impact, ending in `?u=`
+
+Links work untagged until these are filled in. All gear links open in a new tab with `rel="sponsored noopener"`.
+
+### Adding gear to the catalog
+
+Add an entry to `assets/products.js`. `when` picks the jobs it shows on (`switch`, `recorder` or `any`), and `{placeholders}` such as `{ports}`, `{budget}`, `{switches}`, `{recorders}`, `{driveTB}`, `{drives}`, `{cameras}` and `{cableBoxes}` are filled from the plan. Each entry becomes a search link at every store in `site.js`.
+
+### Hooks for later
+
+`config.js` has empty `proUrl` and `analytics` settings for a paid tier and privacy-friendly analytics. Nothing uses them yet. Update the Privacy page before turning analytics on.
 
 ## Roadmap
 
@@ -131,6 +166,8 @@ To host your own copy, fork the repo and turn on GitHub Pages: **Settings → Pa
 - Import a device list from CSV or a VMS export
 - Bigger sites: larger subnets and more than one camera VLAN
 - PDF export of the handoff
+- Saved projects across devices
+- A pro tier: branded handoff documents for your company
 
 ## Contributing
 
