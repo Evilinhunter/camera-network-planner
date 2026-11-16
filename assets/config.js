@@ -1,7 +1,8 @@
 /* Site settings. This is the one file to edit for contact details,
    affiliate tags and future features. Leave a value empty to turn it off. */
 window.SITE = {
-  name: 'Camera Network Planner',
+  // Shown at the top left of every page.
+  name: 'Installer Network Tools',
   // Public address of the site, used for sitemap and social previews.
   baseUrl: 'https://evilinhunter.github.io/camera-network-planner/',
   repoUrl: 'https://github.com/Evilinhunter/camera-network-planner',

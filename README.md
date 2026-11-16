@@ -12,7 +12,18 @@ It works for the three ways camera jobs get wired:
 
 ![Two switch faceplates with ports coloured by device type and a PoE meter under each](docs/faceplates.png)
 
-**[Try it in your browser](https://evilinhunter.github.io/camera-network-planner/)** · no install, no account, nothing leaves your machine
+**[Try it in your browser](https://evilinhunter.github.io/camera-network-planner/camera-planner/)** · no install, no account, nothing leaves your machine
+
+It's part of **[Installer Network Tools](https://evilinhunter.github.io/camera-network-planner/)**, a small set of free tools on the same site:
+
+| Tool | What it does |
+|---|---|
+| [Camera network planner](https://evilinhunter.github.io/camera-network-planner/camera-planner/) | Device list in; IT handoff, IP scheme, firewall requests, port map, PoE check, switch setup and gear list out |
+| [NVR storage calculator](https://evilinhunter.github.io/camera-network-planner/nvr-storage-calculator/) | Cameras, resolution, codec, frame rate and retention in; storage, bandwidth and drive sizes out |
+| [PoE budget calculator](https://evilinhunter.github.io/camera-network-planner/poe-budget-calculator/) | Switch and devices in; total draw against the budget and a per-port standard check out |
+| [Subnet and VLAN planner](https://evilinhunter.github.io/camera-network-planner/subnet-vlan-planner/) | Sites and VLANs in; an IP plan with the CIDR math done and a CSV export out |
+
+![The tools home page](docs/home.png)
 
 The **Gear list** tab turns the plan into a shopping list: switches or recorders, drives, cable, patch cords and UPS, with quantities and the specs to look for. Copy it as CSV for a quote.
 
@@ -103,7 +114,7 @@ Plan a job from the truck or the customer's parking lot.
 
 ## Quick start
 
-1. Open the [live page](https://evilinhunter.github.io/camera-network-planner/), or download `index.html` and open it in any browser.
+1. Open the [live page](https://evilinhunter.github.io/camera-network-planner/camera-planner/), or download the repo and open `camera-planner/index.html` in any browser.
 2. Pick how the cameras connect, then fill in the site name, site number, and the customer's user subnet and DNS/NTP server.
 3. Add your devices and quantities. Picking a type fills in typical watts and Mbps; replace them with the figures from each spec sheet.
 4. Set your switch or recorder: port count, PoE budget and maximum watts per port.
@@ -128,8 +139,12 @@ To host your own copy, fork the repo and turn on GitHub Pages: **Settings → Pa
 ## Project structure
 
 ```
-index.html            the planner
-about/ privacy/ disclosure/   text pages
+index.html                  home page listing the tools
+camera-planner/             the camera network planner
+nvr-storage-calculator/     NVR storage and bandwidth calculator
+poe-budget-calculator/      PoE budget calculator
+subnet-vlan-planner/        subnet and VLAN planner
+about/ privacy/ disclosure/ text pages
 assets/config.js      site settings: contact email, affiliate tags, future hooks
 assets/products.js    gear catalog used by the planner's Gear list tab
 assets/site.css       shared colours, type, header, footer
@@ -140,10 +155,21 @@ docs/                 README screenshots
 
 Every page loads `config.js` and `site.js`, and has an empty `<header id="site-header">` and `<footer id="site-footer">` that `site.js` fills in. Each page sets `data-root` on `<body>` to the path back to the site root: `""` at the root, `"../"` one folder down.
 
+### Adding a new tool page
+
+1. Make a folder named for the URL you want, for example `cable-calculator/`, with an `index.html` inside.
+2. Copy the `<head>` from `about/index.html` and change the title, meta description, canonical URL and Open Graph tags.
+3. Set `<body data-root="../" data-page="cable">`, keep the empty `<header id="site-header">` and `<footer id="site-footer">`, and load `../assets/config.js`, `../assets/products.js` if you show gear, your page's own script, then `../assets/site.js` last.
+4. Add the page to `NAV` in `assets/site.js` (the id matches `data-page`), to the cards on `index.html`, and to `sitemap.xml`.
+5. For gear links, add entries to `assets/products.js` with a new `when` value and render them with `SITE_GEAR('<when>', values)`.
+
+Keep each tool to one self-contained page with inline CSS and JS, so it works on GitHub Pages and when opened straight from disk.
+
 ### Setting the contact email and affiliate tags
 
 Everything lives in `assets/config.js`:
 
+- `name`: the site name in the header
 - `contactEmail`: shown in every footer and on the About and Privacy pages
 - `affiliate.amazonTag`: your Amazon Associates tracking ID. Once it's set, gear links carry it and the Amazon statement appears on the disclosure page.
 - `affiliate.bhImpactPrefix`: your B&H deep-link prefix from Impact, ending in `?u=`
