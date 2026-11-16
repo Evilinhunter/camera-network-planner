@@ -112,6 +112,8 @@ body[data-mode=nvr] .noNvr{display:none}
 .cp{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
 details summary{cursor:pointer;font-weight:600;min-height:32px}
 footer{border-top:1px solid var(--line);color:var(--mute);font-size:14px}
+.ask{margin:0 0 10px;font-size:16px;color:var(--ink)}
+.ask a{color:inherit;font-weight:600;text-underline-offset:3px;overflow-wrap:anywhere}
 @media(max-width:900px){.pt{width:22px;height:20px}.ports{gap:4px}.main{grid-template-columns:minmax(0,1fr)}.head{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:2px 0;text-align:right}.stack td::before{content:attr(data-l);color:var(--mute);text-align:left}.pm thead{display:none}.pm tr{display:grid;grid-template-columns:28px minmax(0,1fr) auto;column-gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}.pm td{border:0;padding:0}.pm td:nth-child(1){grid-row:1/3;align-self:center;font-weight:600}.pm td:nth-child(2){grid-area:1/2}.pm td:nth-child(3){grid-area:2/2;color:var(--mute)}.pm td:nth-child(4){display:none}.pm td:nth-child(5){grid-area:1/3;text-align:right}.pm td:nth-child(6){grid-area:2/3;color:var(--mute)}.pm tr.grp{display:block;padding:0;border:0}.pm tr.grp td{display:block;padding:8px;font-weight:600;color:var(--ink)}}
 @media(prefers-reduced-motion:no-preference){.meter i{transition:width .35s ease}}
@@ -206,7 +208,7 @@ footer{border-top:1px solid var(--line);color:var(--mute);font-size:14px}
   </div>
  </div>
 </section>
-<footer class="band"><div class="wrap">The job loaded at start is a sample (Oakridge Self Storage). Switch setup covers Cisco IOS-XE, Aruba AOS-CX, Arista EOS and MikroTik RouterOS 7. Review every output before you deploy it. Camera and VMS ports vary by vendor.</div></footer>
+<footer class="band"><div class="wrap"><p class="ask" id="ask" hidden></p>The job loaded at start is a sample (Oakridge Self Storage). Switch setup covers Cisco IOS-XE, Aruba AOS-CX, Arista EOS and MikroTik RouterOS 7. Review every output before you deploy it. Camera and VMS ports vary by vendor.</div></footer>
 
 <script>
 {
@@ -231,6 +233,9 @@ const SAMPLE={s:{mode:'it',name:'Oakridge Self Storage',code:'OAK',num:12,gw:'25
  v:{mgmt:99,sys:100,cam:101,acs:102,park:999},pin:{},
  d:[{t:'fixed',q:14,w:8,m:4},{t:'ir',q:6,w:13,m:4},{t:'ptz',q:2,w:30,m:6},{t:'door',q:4,w:15,m:.1},{t:'intercom',q:1,w:13,m:2},{t:'nvr',q:1,w:0,m:0},{t:'ws',q:1,w:0,m:0}]};
 const GRP=[['cam','Cameras'],['acs','Access control'],['sys','Servers']];
+// Where visitors send feature and change requests. Leave empty to hide the note.
+const CONTACT_EMAIL='maucerimatt@gmail.com';
+const CONTACT_SUBJECT='Camera Network Planner Request';
 const KEY='cnp.v1';
 const VEND={cisco:{n:'Cisco IOS-XE',up:p=>'TenGigabitEthernet1/1/1',note:'Built for Catalyst 9200 and 9300 style access switches.'},aruba:{n:'Aruba AOS-CX',up:p=>`1/1/${p.ports+1}`,note:'Built for Aruba CX 6000, 6100 and 6200 style access switches.'},arista:{n:'Arista EOS',up:p=>`Ethernet${p.ports+1}`,note:'Built for Arista 720XP style PoE access switches.'},mikrotik:{n:'MikroTik RouterOS 7',up:p=>'sfp-sfpplus1',note:'Built for CRS3xx and CRS5xx switches using bridge VLAN filtering with hardware offload. Reset the switch to an empty config first, because the factory config already holds every port in its own bridge. VLAN filtering and the unused-port shutdown come last, so paste it from a console or a port you will not lose.'}};
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -487,9 +492,11 @@ $('out').addEventListener('click',e=>{const vk=e.target.dataset.vend;if(vk){S.w.
  try{navigator.clipboard.writeText(txt).then(()=>done('Copied'),()=>{selectPre(id);done('Selected, press copy')})}catch(err){selectPre(id);done('Selected, press copy')}});
 function selectPre(id){try{const r=document.createRange();r.selectNodeContents($(id));const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}catch(e){}}
 $('cpjson').onclick=()=>{const t=$('json');t.value=JSON.stringify(S);try{navigator.clipboard.writeText(t.value).then(()=>{$('cpjson').textContent='Copied'},()=>t.select())}catch(e){t.select()}setTimeout(()=>$('cpjson').textContent='Copy job',1600)};
-$('ldjson').onclick=()=>{try{const x=JSON.parse($('json').value);if(!x.s||!x.d||!x.w||!x.v)throw 0;S=fix(x);form();devForm();update();$('ldjson').textContent='Loaded'}catch(e){$('ldjson').textContent='Not a saved job'}setTimeout(()=>$('ldjson').textContent='Load pasted job',1600)};
+$('ldjson').onclick=()=>{try{const x=JSON.parse($('json').value);if(!x.s||!x.d||!x.w||!x.v)throw 0;S=fix(x);if(CONTACT_EMAIL){const a=$('ask');a.innerHTML=`Have an idea or need a change? Email me at <a href="mailto:${esc(CONTACT_EMAIL)}?subject=${encodeURIComponent(CONTACT_SUBJECT)}">${esc(CONTACT_EMAIL)}</a>`;a.hidden=false}
+form();devForm();update();$('ldjson').textContent='Loaded'}catch(e){$('ldjson').textContent='Not a saved job'}setTimeout(()=>$('ldjson').textContent='Load pasted job',1600)};
 $('sample').onclick=()=>{S=clone(SAMPLE);form();devForm();update()};
 function update(){R=plan();document.body.dataset.mode=R.mode;$('swh2').textContent=R.mode==='nvr'?'Recorder PoE ports':'Switches';$('lb-ports').textContent=R.mode==='nvr'?'PoE ports per recorder':'Access ports per switch';figs(R);out(R);$('json').value=JSON.stringify(S);save()}
+if(CONTACT_EMAIL){const a=$('ask');a.innerHTML=`Have an idea or need a change? Email me at <a href="mailto:${esc(CONTACT_EMAIL)}?subject=${encodeURIComponent(CONTACT_SUBJECT)}">${esc(CONTACT_EMAIL)}</a>`;a.hidden=false}
 form();devForm();update();
 }
 </script>
